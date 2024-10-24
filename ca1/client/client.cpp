@@ -13,7 +13,9 @@ int main(int argc, char *argv[])
     const char *ipaddr = argv[1];
     int port = strtol(argv[2], NULL, 10);
 
-    SocketManager manager;
+    PollManager poll_manager;
+
+    SocketManager manager(106, &poll_manager);
     manager.add_stdin();
 
     try
@@ -22,12 +24,15 @@ int main(int argc, char *argv[])
 
         while (true)
         {
-            auto [fd, m] = manager.receive();
-            if (fd == STDIN_FILENO)
-                manager.send_message(server_fd, m);
-            else if (fd != -1)
+            if (poll_manager.check_poll() != -1)
             {
-                cout << "Received from fd " << fd << ": " << m << endl;
+                auto [fd, m] = manager.receive();
+                if (fd == STDIN_FILENO)
+                    manager.send_message(server_fd, m);
+                else if (fd != -1)
+                {
+                    cout << "Received from fd " << fd << ": " << m << endl;
+                }
             }
         }
     }

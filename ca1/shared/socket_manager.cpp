@@ -30,6 +30,7 @@ void SocketManager::listen_socket(int socket_fd, int backlog)
 void SocketManager::add_socket(int socket_fd, struct sockaddr_in address)
 {
     poll_fds.push_back(pollfd{socket_fd, POLLIN, 0});
+    poll_manager->add_descriptor(manager_code, socket_fd, POLLIN);
     socket_map[socket_fd] = address;
 }
 
@@ -120,9 +121,16 @@ int SocketManager::setup_socket(const char *ip, int port, sockaddr_in &addr)
     return socket_fd;
 }
 
+SocketManager::SocketManager(int manager_code_, PollManager *poll_manager_)
+{
+    poll_manager = poll_manager_;
+    manager_code = manager_code_;
+}
+
 void SocketManager::add_stdin()
 {
     poll_fds.push_back(pollfd{STDIN_FILENO, POLLIN, 0});
+    poll_manager->add_descriptor(manager_code, STDIN_FILENO, POLLIN);
 }
 
 int SocketManager::create_server_socket(const char *ip, int port)

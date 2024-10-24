@@ -2,12 +2,15 @@
 #define SOCKET_MANAGER_H
 
 #include "define.hpp"
+#include "poll_manager.hpp"
 
 class SocketManager {
 private:
     vector<pollfd> poll_fds;
     map<int, struct sockaddr_in> socket_map;
     map<int, int> my_type;
+    PollManager* poll_manager;
+    int manager_code;
 
     int create_socket(int family, int type, int protocol);
     void set_socket_options(int socket_fd, int level, int option, int value);
@@ -31,6 +34,7 @@ private:
     int setup_socket(const char* ip, int port, sockaddr_in& addr);
 
 public:
+    SocketManager(int manager_code_, PollManager* poll_manager_);
     void add_stdin();
     int create_server_socket(const char* ip, int port);
     int create_client_socket(const char* ip, int port);
