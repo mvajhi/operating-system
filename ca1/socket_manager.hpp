@@ -42,7 +42,7 @@ private:
     void check_poll();
     bool is_new_massage(pollfd& pfd);
     bool is_server_fd(int fd);
-    void handle_new_message(pollfd& pfd);
+    pair<int, string> handle_new_message(pollfd& pfd);
 
     void handle_invalid_ip(const char* ip, struct sockaddr_in* addr);
     void try_to_connect(int client_fd, struct sockaddr_in* addr);
