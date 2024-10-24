@@ -123,6 +123,7 @@ int SocketManager::setup_socket(const char *ip, int port, sockaddr_in &addr)
 
 SocketManager::SocketManager(int manager_code_, PollManager *poll_manager_)
 {
+    cout << "mag code: " << manager_code_ << endl;
     poll_manager = poll_manager_;
     manager_code = manager_code_;
 }
