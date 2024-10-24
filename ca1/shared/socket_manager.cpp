@@ -46,7 +46,14 @@ bool SocketManager::is_new_massage(pollfd &pfd)
 
 pair<int, string> SocketManager::handle_new_message(pollfd &pfd)
 {
-    if (is_server_fd(pfd.fd))
+    if (pfd.fd == STDIN_FILENO)
+    {
+        string message;
+        getline(cin, message);
+        return {STDIN_FILENO, message};
+        // return process_poll_result(pfd);
+    }
+    else if (is_server_fd(pfd.fd) && my_type[pfd.fd] == SERVER)
         return {accept_connection(pfd.fd), NEW_CONNECTION_ACCEPTED};
     else
         return process_poll_result(pfd);
@@ -113,6 +120,11 @@ int SocketManager::setup_socket(const char *ip, int port, sockaddr_in &addr)
     return socket_fd;
 }
 
+void SocketManager::add_stdin()
+{
+    poll_fds.push_back(pollfd{STDIN_FILENO, POLLIN, 0});
+}
+
 int SocketManager::create_server_socket(const char *ip, int port)
 {
     struct sockaddr_in server_addr;
@@ -123,6 +135,7 @@ int SocketManager::create_server_socket(const char *ip, int port)
 
     add_socket(server_fd, server_addr);
 
+    my_type[server_fd] = SERVER;
     return server_fd;
 }
 
@@ -135,6 +148,7 @@ int SocketManager::create_client_socket(const char *ip, int port)
 
     add_socket(client_fd, server_addr);
 
+    my_type[client_fd] = CLIENT;
     return client_fd;
 }
 
@@ -145,6 +159,7 @@ int SocketManager::accept_connection(int server_fd)
     int new_fd = accept(server_fd, (struct sockaddr *)(&new_addr), &new_size);
     handle_accept_failure(new_fd);
     add_socket(new_fd, new_addr);
+    my_type[server_fd] = SERVER;
     return new_fd;
 }
 

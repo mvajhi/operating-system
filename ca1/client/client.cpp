@@ -1,3 +1,4 @@
+
 #include "define.hpp"
 #include "socket_manager.hpp"
 
@@ -13,6 +14,7 @@ int main(int argc, char *argv[])
     int port = strtol(argv[2], NULL, 10);
 
     SocketManager manager;
+    manager.add_stdin();
 
     try
     {
@@ -20,10 +22,13 @@ int main(int argc, char *argv[])
 
         while (true)
         {
-            char message[BUFFER_SIZE];
-            memset(message, 0, BUFFER_SIZE);
-            read(STDIN, message, BUFFER_SIZE);
-            manager.send_message(server_fd, (string)message);
+            auto [fd, m] = manager.receive();
+            if (fd == STDIN_FILENO)
+                manager.send_message(server_fd, m);
+            else if (fd != -1)
+            {
+                cout << "Received from fd " << fd << ": " << m << endl;
+            }
         }
     }
     catch (const runtime_error &e)

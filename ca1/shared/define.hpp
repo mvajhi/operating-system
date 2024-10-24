@@ -39,4 +39,7 @@ using namespace std;
 // Define constants
 const pair<int, string> NO_NEW_MASSAGE = {-1, ""};
 
+#define SERVER 0
+#define CLIENT 1
+
 #endif

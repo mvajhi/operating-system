@@ -13,11 +13,11 @@ tmux split-window -v
 
 tmux send-keys -t 0 "cd server && ./out/server.out 127.0.0.1 8080" C-m
 
-sleep 0.1
+sleep 0.2
 tmux send-keys -t 1 "cd client && ./out/client.out 127.0.0.1 8080" C-m
-sleep 0.1
+sleep 0.2
 tmux send-keys -t 2 "cd client && ./out/client.out 127.0.0.1 8080" C-m
-sleep 0.1
+sleep 0.2
 tmux send-keys -t 3 "cd client && ./out/client.out 127.0.0.1 8080" C-m
 
 tmux attach-session -t test_session
