@@ -1,8 +1,5 @@
+#include "define.hpp"
 #include "socket_manager.hpp"
-#include <iostream>
-#include <stdexcept>
-
-using namespace std;
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {

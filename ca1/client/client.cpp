@@ -1,14 +1,5 @@
+#include "define.hpp"
 #include "socket_manager.hpp"
-#include <iostream>
-#include <stdexcept>
-#include <unistd.h>
-#include <cstring>
-
-#define STDIN 0
-#define STDOUT 1
-#define BUFFER_SIZE 1024
-
-using namespace std;
 
 int main(int argc, char *argv[])
 {

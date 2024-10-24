@@ -1,33 +1,7 @@
 #ifndef SOCKET_MANAGER_H
 #define SOCKET_MANAGER_H
 
-#include <netinet/in.h>
-#include <vector>
-#include <poll.h>
-#include <map>
-#include <stdexcept>
-#include <string>
-
-using namespace std;
-
-#define BUFFER_SIZE 1024
-
-// Define error messages
-#define ERR_SOCKET_CREATION "FAILED: Socket was not created"
-#define ERR_SOCKET_OPTION "FAILED: Setting socket option failed"
-#define ERR_BIND "FAILED: Bind unsuccessful"
-#define ERR_LISTEN "FAILED: Listen unsuccessful"
-#define ERR_POLL "FAILED: Poll unsuccessful"
-#define ERR_CONNECT "FAILED: Connect unsuccessful"
-#define ERR_ACCEPT "FAILED: Accept unsuccessful"
-#define ERR_INVALID_IP "FAILED: Invalid IPv4 address"
-#define ERR_SOCKET_NOT_FOUND "FAILED: Socket not found"
-
-// Define information messages
-#define NEW_CONNECTION_ACCEPTED "INFO: New connection accepted"
-
-// 
-const pair<int, string> NO_NEW_MASSAGE = {-1, ""};
+#include "define.hpp"
 
 class SocketManager {
 private:
