@@ -1,0 +1,6 @@
+*/out/
+*.o
+*.out
+*.swp
+*.swo
+.vscode/
