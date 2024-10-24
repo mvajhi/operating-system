@@ -23,9 +23,16 @@ using namespace std;
 #define ERR_INVALID_IP "FAILED: Invalid IPv4 address"
 #define ERR_SOCKET_NOT_FOUND "FAILED: Socket not found"
 
+// Define information messages
+#define NEW_CONNECTION_ACCEPTED "INFO: New connection accepted"
+
+// 
+const pair<int, string> NO_NEW_MASSAGE = {-1, ""};
+
 class SocketManager {
 private:
     vector<pollfd> poll_fds;
+    map<int, struct sockaddr_in> socket_map;
 
     int create_socket(int family, int type, int protocol);
     void set_socket_options(int socket_fd, int level, int option, int value);
@@ -33,9 +40,12 @@ private:
     void listen_socket(int socket_fd, int backlog);
     void add_socket(int socket_fd, struct sockaddr_in address);
     void check_poll();
+    bool is_new_massage(pollfd& pfd);
+    bool is_server_fd(int fd);
+    void handle_new_message(pollfd& pfd);
 
     void handle_invalid_ip(const char* ip, struct sockaddr_in* addr);
-    void handle_connect_failure(int client_fd, struct sockaddr_in* addr);
+    void try_to_connect(int client_fd, struct sockaddr_in* addr);
     void handle_accept_failure(int server_fd);
     void handle_socket_creation(int socket_fd);
     void handle_socket_option(int result);
@@ -46,14 +56,12 @@ private:
     int setup_socket(const char* ip, int port, sockaddr_in& addr);
 
 public:
-    map<int, struct sockaddr_in> socket_map;
-    void create_server_socket(const char* ip, int port);
-    void create_client_socket(const char* ip, int port);
+    int create_server_socket(const char* ip, int port);
+    int create_client_socket(const char* ip, int port);
     int accept_connection(int server_fd);
     pair<int, string> receive();
     void send_message(int socket_fd, const string& message);
     void close_socket(int socket_fd);
-    bool is_server_fd(int fd);
 };
 
 #endif

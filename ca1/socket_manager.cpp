@@ -35,23 +35,34 @@ void SocketManager::check_poll() {
     handle_poll_result(result);
 }
 
+bool SocketManager::is_new_massage(pollfd &pfd)
+{
+    return pfd.revents & POLLIN;
+}
+
+void SocketManager::handle_new_message(pollfd &pfd)
+{
+    if (is_server_fd(pfd.fd)) {
+        accept_connection(pfd.fd);
+    }
+    else {
+        process_poll_result(pfd);
+    }
+}
+
 void SocketManager::handle_invalid_ip(const char* ip, struct sockaddr_in* addr) {
     if (inet_pton(AF_INET, ip, &addr->sin_addr) == -1) {
         throw runtime_error(ERR_INVALID_IP);
     }
 }
 
-void SocketManager::handle_connect_failure(int client_fd, struct sockaddr_in* addr) {
-    if (connect(client_fd, (struct sockaddr*)addr, sizeof(*addr)) == -1) {
+void SocketManager::try_to_connect(int client_fd, struct sockaddr_in* addr) {
+    if (connect(client_fd, (struct sockaddr*)addr, sizeof(*addr)) == -1)
         throw runtime_error(ERR_CONNECT);
-    }
 }
 
-void SocketManager::handle_accept_failure(int server_fd) {
-    int new_fd = accept(server_fd, nullptr, nullptr);
-    if (new_fd == -1) {
-        throw runtime_error(ERR_ACCEPT);
-    }
+void SocketManager::handle_accept_failure(int new_fd) {
+    if (new_fd == -1) throw runtime_error(ERR_ACCEPT);
 }
 
 void SocketManager::handle_socket_creation(int socket_fd) {
@@ -90,7 +101,7 @@ int SocketManager::setup_socket(const char* ip, int port, sockaddr_in& addr) {
     return socket_fd;
 }
 
-void SocketManager::create_server_socket(const char* ip, int port) {
+int SocketManager::create_server_socket(const char* ip, int port) {
     struct sockaddr_in server_addr;
     int server_fd = setup_socket(ip, port, server_addr);
 
@@ -98,15 +109,19 @@ void SocketManager::create_server_socket(const char* ip, int port) {
     listen_socket(server_fd, 20);
 
     add_socket(server_fd, server_addr);
+
+    return server_fd;
 }
 
-void SocketManager::create_client_socket(const char* ip, int port) {
+int SocketManager::create_client_socket(const char* ip, int port) {
     struct sockaddr_in server_addr;
     int client_fd = setup_socket(ip, port, server_addr);
 
-    handle_connect_failure(client_fd, &server_addr);
+    try_to_connect(client_fd, &server_addr);
 
     add_socket(client_fd, server_addr);
+
+    return client_fd;
 }
 
 int SocketManager::accept_connection(int server_fd) {
@@ -120,20 +135,17 @@ int SocketManager::accept_connection(int server_fd) {
 
 pair<int, string> SocketManager::receive() {
     check_poll();
-    for (auto& pfd : poll_fds) {
-        if (pfd.revents & POLLIN) {
-            return process_poll_result(pfd);
-        }
-    }
-    return {-1, ""};
+    for (auto& pfd : poll_fds)
+        if (is_new_massage(pfd))
+            handle_new_message(pfd);
+    return NO_NEW_MASSAGE;
 }
 
 void SocketManager::send_message(int socket_fd, const string& message) {
-    if (socket_map.find(socket_fd) != socket_map.end()) {
+    if (socket_map.find(socket_fd) != socket_map.end())
         send(socket_fd, message.c_str(), message.length(), 0);
-    } else {
+    else
         throw runtime_error(ERR_SOCKET_NOT_FOUND);
-    }
 }
 
 void SocketManager::close_socket(int socket_fd) {
