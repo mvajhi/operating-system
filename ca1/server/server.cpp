@@ -1,21 +1,27 @@
 #include "define.hpp"
 #include "socket_manager.hpp"
+#include "poll_manager.hpp"
 
 int main(int argc, char *argv[])
 {
+    int UID = 100;
+    PollManager poll_manager;
+
     if (argc != 3)
     {
-        cerr << "Invalid Arguments" << endl;
+        cout << "Invalid Arguments\n";
         return 1;
     }
 
     const char *ipaddr = argv[1];
     int port = strtol(argv[2], NULL, 10);
 
-    PollManager poll_manager;
-
-    SocketManager manager(100, &poll_manager);
-    SocketManager sub_manager(101, &poll_manager);
+    SocketManager manager(UID, &poll_manager);
+    int manager_code = UID;
+    UID++;
+    SocketManager sub_manager(UID, &poll_manager);
+    int sub_manager_code = UID;
+    UID++;
 
     try
     {
@@ -26,7 +32,7 @@ int main(int argc, char *argv[])
 
         while (true)
         {
-            if (poll_manager.check_poll() == 100)
+            if (poll_manager.check_poll() == manager_code)
             {
                 auto [fd, m] = manager.receive();
                 if (fd == STDIN_FILENO)
@@ -36,7 +42,7 @@ int main(int argc, char *argv[])
                     cout << "Received from fd " << fd << ": " << m << endl;
                 }
             }
-            else if (poll_manager.check_poll() == 101)
+            else if (poll_manager.check_poll() == sub_manager_code)
             {
                 auto [fd2, m2] = sub_manager.receive();
                 if (fd2 != -1)

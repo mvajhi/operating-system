@@ -14,7 +14,7 @@ int PollManager::check_poll()
     for (auto &pfd : fds)
         if (pfd.revents & POLLIN)
         {
-            cout << "PollManager: " << fds_owner[pfd.fd] << " is ready" << endl;
+            // cout << "PollManager: " << fds_owner[pfd.fd] << " is ready" << endl;
             return fds_owner[pfd.fd];
         }
     return -1;

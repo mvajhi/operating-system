@@ -49,10 +49,10 @@ pair<int, string> SocketManager::handle_new_message(pollfd &pfd)
 {
     if (pfd.fd == STDIN_FILENO)
     {
-        string message;
-        getline(cin, message);
-        return {STDIN_FILENO, message};
-        // return process_poll_result(pfd);
+        char buffer[BUFFER_SIZE];
+        memset(buffer, 0, BUFFER_SIZE);
+        read(STDIN, buffer, BUFFER_SIZE);
+        return {STDIN_FILENO, (string)buffer};
     }
     else if (is_server_fd(pfd.fd) && my_type[pfd.fd] == SERVER)
         return {accept_connection(pfd.fd), NEW_CONNECTION_ACCEPTED};
