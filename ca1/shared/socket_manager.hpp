@@ -42,6 +42,7 @@ public:
     pair<int, string> receive();
     void send_message(int socket_fd, const string& message);
     void close_socket(int socket_fd);
+    void close_all_socket();
 };
 
 #endif

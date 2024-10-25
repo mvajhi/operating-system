@@ -25,17 +25,20 @@ private:
     int timer_fd;
 
     void main_handler();
-    // void end_game();
+    void end_game();
+    bool is_end_game(const string& m);
     bool is_new_fd(int fd);
     void add_player(int fd);
     bool have_name(int fd);
     void set_name(int fd, const string& name);
     void send_rooms_info(int fd);
-    // string get_rooms_info();
     bool can_join_room(const string& room_number);
     void join_room(int fd, const string& room_number);
     string get_rooms_info();
     void create_rooms(int room_count);
+    void send_leader_board();
+    void send_all(const string& message);
+    void close_program();
 
 };
 

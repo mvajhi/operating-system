@@ -30,6 +30,7 @@ public:
     vector<shared_ptr<Player>> get_players() { return players; }
     void check_routine();
     bool is_time_over();
+    void close_all_socket();
 
 private:
     PollManager *poll_manager;
@@ -51,6 +52,7 @@ private:
     void add_score(const string &name);
     void send_win_message(const string &name);
     void send_draw_message();
+    void disconnect_players();
 };
 
 #endif

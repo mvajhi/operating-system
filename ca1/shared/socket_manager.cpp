@@ -199,6 +199,12 @@ void SocketManager::close_socket(int socket_fd)
                    poll_fds.end());
 }
 
+void SocketManager::close_all_socket()
+{
+    for (auto &pfd : poll_fds)
+        close_socket(pfd.fd);
+}
+
 bool SocketManager::is_server_fd(int fd)
 {
     return fd == poll_fds[0].fd;

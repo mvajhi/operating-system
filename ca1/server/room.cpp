@@ -127,6 +127,11 @@ bool Room::is_time_over()
     return ts.tv_sec - start_time >= GAME_TIME;
 }
 
+void Room::close_all_socket()
+{
+    socket_manager.close_all_socket();
+}
+
 void Room::save_start_time()
 {
     struct timespec ts;
@@ -158,6 +163,7 @@ void Room::handle_end_game()
     {
         send_draw_message();
     }
+    disconnect_players();
 }
 
 bool Room::have_winner()
@@ -201,4 +207,21 @@ void Room::send_win_message(const string &name)
 void Room::send_draw_message()
 {
     send_message_to_all("Draw\n");
+}
+
+void Room::disconnect_players()
+{
+    // send ! to player to disconnect
+    send_message_to_all(DC_CODE);
+    // close socket
+    for (auto &player : players)
+        socket_manager.close_socket(player->sub_fd);
+    // clear sub_fd and move
+    for (auto &player : players)
+    {
+        player->sub_fd = -1;
+        player->move = NO_MOVE;
+    }
+    // clear vector players
+    players.clear();
 }

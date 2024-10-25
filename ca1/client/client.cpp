@@ -54,6 +54,18 @@ int main(int argc, char *argv[])
                         manager.send_message(room_fd, name);
                         out_fd = room_fd;
                     }
+                    else if (m.find(DC_CODE) != string::npos)
+                    {
+                        cout << "Disconnected from sub server" << endl;
+                        manager.close_socket(room_fd);
+                        out_fd = server_fd;
+                        manager.send_message(out_fd, "?");
+                    }
+                    else if (m.find(END_CODE) != string::npos)
+                    {
+                        manager.close_all_socket();
+                        exit(0);
+                    }
                 }
             }
         }

@@ -16,7 +16,7 @@ GameManager::GameManager(const char *ip_, int port_, int room_count)
     timer_spec.it_value.tv_sec = TIMER_POLL_INTERVAL;
     timer_spec.it_interval.tv_sec = TIMER_POLL_INTERVAL;
     timerfd_settime(timer_fd, 0, &timer_spec, NULL);
-    
+
     UID++;
     time_UID = UID;
     poll_manager.add_descriptor(time_UID, timer_fd, POLLIN);
@@ -46,15 +46,18 @@ void GameManager::main_handler()
 {
     auto [fd, m] = socket_manager.receive();
     if (fd == STDIN_FILENO)
-        // if (is_end_game(m))
-        //     end_game();
-        socket_manager.send_message(6, m);
+    {
+        if (is_end_game(m))
+            end_game();
+    }
     else if (fd == -1)
         return;
 
     cout << "Received from fd " << fd << ": " << m << endl;
 
-    if (is_new_fd(fd))
+    if (m == "?")
+        send_rooms_info(fd);
+    else if (is_new_fd(fd))
         add_player(fd);
     else if (!have_name(fd))
     {
@@ -72,6 +75,17 @@ void GameManager::main_handler()
             send_rooms_info(fd);
         }
     }
+}
+
+void GameManager::end_game()
+{
+    send_leader_board();
+    close_program();
+}
+
+bool GameManager::is_end_game(const string &m)
+{
+    return m.find(END_GAME_COMMAND) != string::npos;
 }
 
 bool GameManager::is_new_fd(int fd)
@@ -153,4 +167,32 @@ void GameManager::create_rooms(int room_count)
         ++UID;
         rooms.push_back(Room(i, &poll_manager, ip, port + UID, UID));
     }
+}
+
+void GameManager::send_leader_board()
+{
+    string massage = "Leader Board\n";
+    sort(players.begin(), players.end(), [](shared_ptr<Player> a, shared_ptr<Player> b)
+         { return a->score > b->score; });
+    int p_size = players.size();
+    for (int i = 0; i < p_size; i++)
+        massage += to_string(i + 1) + ". " + players[i]->name + " " + to_string(players[i]->score) + "\n";
+
+    send_all(massage);
+}
+
+// TODO: use broadcast
+void GameManager::send_all(const string &message)
+{
+    for (auto &player : players)
+        socket_manager.send_message(player->fd, message);
+}
+
+void GameManager::close_program()
+{
+    send_all(END_CODE);
+    socket_manager.close_all_socket();
+    for (auto &room : rooms)
+        room.close_all_socket();
+    exit(0);
 }

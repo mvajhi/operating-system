@@ -64,10 +64,15 @@ const pair<int, string> NO_NEW_MASSAGE = {-1, ""};
 #define SCISSORS 2
 
 // Define limits
-#define GAME_TIME 5
+#define GAME_TIME 10
 
 
 #define TIMER_POLL_INTERVAL 1
+
+#define DC_CODE "!$!"
+#define END_CODE "&%&"
+
+#define END_GAME_COMMAND "end_game"
 
 typedef struct Player
 {
