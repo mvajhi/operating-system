@@ -8,7 +8,8 @@
 class Room
 {
 public:
-    Room(int room_ID_, PollManager *poll_manager_, const char *ip_, int port_, int UID_);
+    Room(int room_ID_, PollManager *poll_manager_, const char *ip_, int port_, int UID_, 
+    const char* b_ip_, int b_port_);
 
     void add_player(shared_ptr<Player> player);
 
@@ -26,7 +27,7 @@ public:
     int get_ID() { return room_ID; }
     int get_UID() { return UID; }
     bool is_full() { return players.size() == 2; }
-    string get_connection_info() { return (string)ip + " " + to_string(port); }
+    string get_connection_info();
     vector<shared_ptr<Player>> get_players() { return players; }
     void check_routine();
     bool is_time_over();
@@ -38,6 +39,9 @@ private:
     SocketManager socket_manager;
     const char *ip;
     int port;
+    const char *b_ip;
+    int b_port;
+    int broadcast_fd;
     int UID;
     vector<shared_ptr<Player>> players;
     bool is_game_started = false;

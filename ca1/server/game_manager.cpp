@@ -28,11 +28,11 @@ void GameManager::handler()
     int result = poll_manager.check_poll();
     if (result == main_ID)
         main_handler();
-    if (result == time_UID)
-        check_routine();
     for (auto &room : rooms)
         if (result == room.get_UID())
             room.handler();
+    if (result == time_UID)
+        check_routine();
 }
 
 void GameManager::check_routine()
@@ -169,7 +169,7 @@ void GameManager::create_rooms(int room_count)
     for (int i = 0; i < room_count; i++)
     {
         ++UID;
-        rooms.push_back(Room(i, &poll_manager, ip, port + UID, UID));
+        rooms.push_back(Room(i, &poll_manager, ip, port + UID, UID, BIP, port + UID+100));
     }
 }
 
@@ -185,7 +185,6 @@ void GameManager::send_leader_board()
     send_all(massage);
 }
 
-// TODO: use broadcast
 void GameManager::send_all(const string &message)
 {
     // for (auto &player : players)

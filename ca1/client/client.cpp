@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
         int broadcast_fd = -1;
         broadcast_fd = manager.create_broadcast_socket(BIP, port, true);
         int room_fd = -1;
+        int room_broadcast_fd = -1;
         bool flag_name = true;
         auto out_fd = server_fd;
         string name;
@@ -44,21 +45,36 @@ int main(int argc, char *argv[])
                         flag_name = false;
                     }
                 }
-                else if (fd == broadcast_fd)
-                {
-                    cout << "Received from broadcast: " << m << endl;
-                }
                 else if (fd != -1)
                 {
-                    cout << "Received from fd " << fd << ": " << m << endl;
+                    if (fd == broadcast_fd)
+                    {
+                        cout << "Received from broadcast: " << m << endl;
+                    }
+                    else if (fd == room_broadcast_fd)
+                    {
+                        cout << "Received from room broadcast: " << m << endl;
+                    }
+                    else
+                        cout << "Received from fd " << fd << ": " << m << endl;
+                    
                     if (m[0] == '$')
                     {
-                        // input: $ip port
+                        // input: $ip port broadcast_ip broadcast_port
                         string ip = m.substr(1, m.find(' ') - 1);
-                        int port = stoi(m.substr(m.find(' ') + 1));
+                        m = m.substr(m.find(' ') + 1);
+                        int port = stoi(m.substr(0, m.find(' ')));
+                        m = m.substr(m.find(' ') + 1);
+                        string b_ip = m.substr(0, m.find(' '));
+                        int b_port = stoi(m.substr(m.find(' ') + 1));
+
                         cout << "Connecting to " << ip << " " << port << endl;
                         room_fd = manager.create_client_socket(ip.c_str(), port);
                         manager.send_message(room_fd, name);
+
+                        cout << "Connecting to " << b_ip << " " << b_port << endl;
+                        room_broadcast_fd = manager.create_broadcast_socket(b_ip.c_str(), b_port, true);
+
                         out_fd = room_fd;
                     }
                     else if (m.find(DC_CODE) != string::npos)

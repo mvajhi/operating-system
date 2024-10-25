@@ -1,12 +1,17 @@
 #include "room.hpp"
 
-Room::Room(int room_ID_, PollManager *poll_manager_, const char *ip_, int port_, int UID_)
+Room::Room(int room_ID_, PollManager *poll_manager_, const char *ip_,
+           int port_, int UID_, const char *b_ip_, int b_port_)
     : poll_manager(poll_manager_), room_ID(room_ID_), socket_manager(UID_, poll_manager_)
 {
     socket_manager.create_server_socket(ip_, port_);
     UID = UID_;
     ip = ip_;
     port = port_;
+
+    broadcast_fd = socket_manager.create_broadcast_socket(b_ip_, b_port_, true);
+    b_ip = b_ip_;
+    b_port = b_port_;
 }
 
 void Room::add_player(shared_ptr<Player> player)
@@ -20,6 +25,8 @@ void Room::handler()
     {
         auto [fd, m] = socket_manager.receive();
         cout << "(sub " << room_ID << ")Received from fd " << fd << ": " << m << endl;
+        if (fd == broadcast_fd)
+            return;
         if (!is_game_started)
             prepare_game(fd, m);
         else
@@ -98,11 +105,11 @@ void Room::send_message(int fd, const string &message)
     socket_manager.send_message(fd, message);
 }
 
-// TODO write with broadcast
 void Room::send_message_to_all(const string &message)
 {
-    for (auto &player : players)
-        socket_manager.send_message(player->sub_fd, message);
+    // for (auto &player : players)
+    //     socket_manager.send_message(player->sub_fd, message);
+    socket_manager.send_message(broadcast_fd, message);
 }
 
 void Room::send_game_choice()
@@ -112,6 +119,12 @@ void Room::send_game_choice()
     message += "\t\t  " + to_string(PAPER) + " Paper\n";
     message += "\t\t  " + to_string(SCISSORS) + " Scissors\n";
     send_message_to_all(message);
+}
+
+string Room::get_connection_info()
+{
+    return string(ip) + " " + to_string(port) + " " +
+     string(b_ip) + " " + to_string(b_port);
 }
 
 void Room::check_routine()
@@ -163,6 +176,7 @@ void Room::handle_end_game()
     {
         send_draw_message();
     }
+    sleep(SLEEP_TIME);
     disconnect_players();
 }
 
@@ -213,6 +227,7 @@ void Room::disconnect_players()
 {
     // send ! to player to disconnect
     send_message_to_all(DC_CODE);
+    sleep(SLEEP_TIME);
     // close socket
     for (auto &player : players)
         socket_manager.close_socket(player->sub_fd);

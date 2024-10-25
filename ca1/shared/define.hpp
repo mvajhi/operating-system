@@ -67,7 +67,9 @@ const pair<int, string> NO_NEW_MASSAGE = {-1, ""};
 #define SCISSORS 2
 
 // Define limits
-#define GAME_TIME 10
+#define GAME_TIME 5
+
+#define SLEEP_TIME 0.5
 
 
 #define TIMER_POLL_INTERVAL 1

@@ -164,9 +164,10 @@ int SocketManager::create_broadcast_socket(const char *ip, int port, bool poll)
 
     if (poll)
         add_socket(b_socket, bc_address);
+    else
+        socket_map[b_socket] = bc_address;
 
     my_type[b_socket] = BROADCAST;
-    socket_map[b_socket] = bc_address;
     return b_socket;
 }
 
