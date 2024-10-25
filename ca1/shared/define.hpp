@@ -18,6 +18,8 @@
 #include <memory>
 #include <signal.h>
 #include <fcntl.h>
+#include <time.h>
+#include <sys/timerfd.h>
 
 using namespace std;
 
@@ -62,9 +64,10 @@ const pair<int, string> NO_NEW_MASSAGE = {-1, ""};
 #define SCISSORS 2
 
 // Define limits
-#define GAME_TIME 10
+#define GAME_TIME 5
 
 
+#define TIMER_POLL_INTERVAL 1
 
 typedef struct Player
 {

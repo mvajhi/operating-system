@@ -1,7 +1,5 @@
 #include "room.hpp"
 
-Room *Room::active_room = nullptr;
-
 Room::Room(int room_ID_, PollManager *poll_manager_, const char *ip_, int port_, int UID_)
     : poll_manager(poll_manager_), room_ID(room_ID_), socket_manager(UID_, poll_manager_)
 {
@@ -77,6 +75,8 @@ void Room::prepare_game(int fd, string m)
 
 void Room::game_massage_handler(int fd, string m)
 {
+    if (is_time_over())
+        return;
     for (auto &player : players)
         if (player->sub_fd == fd)
         {
@@ -87,7 +87,9 @@ void Room::game_massage_handler(int fd, string m)
             if (move != ROCK && move != PAPER && move != SCISSORS)
                 return;
             player->move = move;
-            send_message(fd, " You chose " + player->move);
+            string move_name = (move == ROCK) ? "Rock" : (move == PAPER) ? "Paper"
+                                                                         : "Scissors";
+            send_message(fd, "You chose " + move_name);
         }
 }
 
@@ -112,36 +114,40 @@ void Room::send_game_choice()
     send_message_to_all(message);
 }
 
-void Room::set_alarm()
+void Room::check_routine()
 {
-    active_room = this;
-    signal(SIGALRM, Room::call_end_alarm);
-    alarm(GAME_TIME);
+    if (is_game_started && is_time_over())
+        handle_end_game();
 }
 
-void Room::end_alarm(int sig)
+bool Room::is_time_over()
 {
-    alarm(0);
-    is_game_ended = true;
-    send_message_to_all("Game ended\n");
-    handle_end_game();
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return ts.tv_sec - start_time >= GAME_TIME;
+}
+
+void Room::save_start_time()
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    start_time = ts.tv_sec;
 }
 
 void Room::start_game()
 {
     is_game_started = true;
-    is_game_ended = false;
     players[0]->move = NO_MOVE;
     players[1]->move = NO_MOVE;
     send_message_to_all("Game started\n");
     send_game_choice();
-    set_alarm();
+    save_start_time();
 }
 
 void Room::handle_end_game()
 {
     is_game_started = false;
-    is_game_ended = false;
+    send_message_to_all("Game ended\n");
     if (have_winner())
     {
         string winner_name = get_winner_name();

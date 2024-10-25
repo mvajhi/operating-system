@@ -28,8 +28,8 @@ public:
     bool is_full() { return players.size() == 2; }
     string get_connection_info() { return (string)ip + " " + to_string(port); }
     vector<shared_ptr<Player>> get_players() { return players; }
-    static void call_end_alarm(int sig) { active_room->end_alarm(sig); }
-    void end_alarm(int sig);
+    void check_routine();
+    bool is_time_over();
 
 private:
     PollManager *poll_manager;
@@ -40,11 +40,10 @@ private:
     int UID;
     vector<shared_ptr<Player>> players;
     bool is_game_started = false;
-    bool is_game_ended = false;
-    static Room* active_room;
+    time_t start_time;
 
 
-    void set_alarm();
+    void save_start_time();
     void start_game();
     void handle_end_game();
     bool have_winner();

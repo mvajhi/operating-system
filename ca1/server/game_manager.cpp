@@ -3,7 +3,6 @@
 GameManager::GameManager(const char *ip_, int port_, int room_count)
     : socket_manager(FIRST_UID, &poll_manager)
 {
-    cout << "test game manager" << endl;
     ip = ip_;
     port = port_;
     main_ID = FIRST_UID;
@@ -11,15 +10,36 @@ GameManager::GameManager(const char *ip_, int port_, int room_count)
     socket_manager.create_server_socket(ip, port);
     socket_manager.add_stdin();
     create_rooms(room_count);
+
+    timer_fd = timerfd_create(CLOCK_REALTIME, 0);
+    struct itimerspec timer_spec = {};
+    timer_spec.it_value.tv_sec = TIMER_POLL_INTERVAL;
+    timer_spec.it_interval.tv_sec = TIMER_POLL_INTERVAL;
+    timerfd_settime(timer_fd, 0, &timer_spec, NULL);
+    
+    UID++;
+    time_UID = UID;
+    poll_manager.add_descriptor(time_UID, timer_fd, POLLIN);
 }
 
 void GameManager::handler()
 {
-    if (poll_manager.check_poll() == main_ID)
+    int result = poll_manager.check_poll();
+    if (result == main_ID)
         main_handler();
+    if (result == time_UID)
+        check_routine();
     for (auto &room : rooms)
-        if (poll_manager.check_poll() == room.get_UID())
+        if (result == room.get_UID())
             room.handler();
+}
+
+void GameManager::check_routine()
+{
+    uint64_t expirations;
+    read(timer_fd, &expirations, sizeof(expirations));
+    for (auto &room : rooms)
+        room.check_routine();
 }
 
 void GameManager::main_handler()

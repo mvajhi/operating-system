@@ -10,6 +10,7 @@ class GameManager {
 public:
     GameManager(const char* ip, int port, int room_count);
     void handler();
+    void check_routine();
 
 private:
     vector<shared_ptr<Player>> players;
@@ -20,6 +21,8 @@ private:
     int main_ID;
     const char* ip;
     int port;
+    int time_UID;
+    int timer_fd;
 
     void main_handler();
     // void end_game();
