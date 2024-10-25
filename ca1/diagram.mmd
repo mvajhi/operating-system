@@ -1,0 +1,89 @@
+---
+config:
+  theme: neo
+---
+classDiagram
+  class Server {
+    +Server(ip, port, room_count)
+  }
+  class GameManager {
+    +Socket Broadcast
+    +Socket TCP
+    +GameManager(ip, port, room_count)
+    +IOhandler()
+    +check_time()
+    +Add_player()
+    +Move_player_to_room()
+  }
+  class Room {
+    +Socket Broadcast
+    +Socket TCP
+    +Room(room_ID, poll_manager, ip, port, UID, b_ip, b_port)
+    +handler()
+    +add_player(player)
+    +check_time()
+  }
+  class SocketManager {
+    +fds
+    +sockets
+    +create_server_socket(ip, port)
+    +create_client_socket(ip, port)
+    +create_broadcast_soket(ip, port)
+    +send_message(socket_fd, message)
+    +receive()
+  }
+  class RoomSocketManager {
+    +fds
+    +sockets
+    +create_server_socket(ip, port)
+    +create_client_socket(ip, port)
+    +create_broadcast_soket(ip, port)
+    +send_message(socket_fd, message)
+    +receive()
+  }
+  class ClientSocketManager {
+    +fds
+    +sockets
+    +create_server_socket(ip, port)
+    +create_client_socket(ip, port)
+    +create_broadcast_soket(ip, port)
+    +send_message(socket_fd, message)
+    +receive()
+  }
+  class ClientPollManager {
+    +add_descriptor(owner, fd, events)
+    +check_poll()
+  }
+  class PollManager {
+    +add_descriptor(owner, fd, events)
+    +check_poll()
+  }
+  class Player {
+    +fd
+    +sub fd
+    +score
+    +name
+  }
+  class Client {
+    +Client(ip, port)
+    +connect_to_server(ip, port)
+  }
+  GameManager --> Room : contains
+  GameManager <..> Room : transfer player data
+  GameManager --> Player : contains
+  GameManager --> SocketManager
+  GameManager --> PollManager
+  Server -- GameManager
+  Room ..> PollManager : ptr can check and register fd
+  Room ..>  Player: joined player
+  Room --> RoomSocketManager
+  RoomSocketManager ..> PollManager : ptr can check and register fd
+  SocketManager ..> PollManager : ptr can check and register fd
+  Client --> ClientSocketManager
+  Client --> ClientPollManager
+  ClientSocketManager ..> ClientPollManager : ptr can check and register fd
+  Client ..|> GameManager : TCP socket
+  Client <|..|> GameManager : Broadcast socket
+  Client <..|> GameManager : Get room ip, port
+  Client ..|> Room : TCP socket
+  Client <|..|> Room : Broadcast socket
