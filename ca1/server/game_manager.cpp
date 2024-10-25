@@ -1,26 +1,25 @@
 #include "game_manager.hpp"
 
-GameManager::GameManager(const char *ip, int port, int room_count)
+GameManager::GameManager(const char *ip_, int port_, int room_count)
     : socket_manager(FIRST_UID, &poll_manager)
 {
+    cout << "test game manager" << endl;
+    ip = ip_;
+    port = port_;
     main_ID = FIRST_UID;
     UID = FIRST_UID + 1;
     socket_manager.create_server_socket(ip, port);
     socket_manager.add_stdin();
-    // for (int i = 0; i < room_count; i++)
-    // {
-    //     rooms.push_back(Room(++UID));
-    // }
+    create_rooms(room_count);
 }
 
 void GameManager::handler()
 {
     if (poll_manager.check_poll() == main_ID)
         main_handler();
-    // for (auto &room : rooms)
-    //     if (poll_manager.check_poll() == room.get_ID())
-    //         room.handler();
-
+    for (auto &room : rooms)
+        if (poll_manager.check_poll() == room.get_UID())
+            room.handler();
 }
 
 void GameManager::main_handler()
@@ -39,6 +38,7 @@ void GameManager::main_handler()
         add_player(fd);
     else if (!have_name(fd))
     {
+        m.pop_back();
         set_name(fd, m);
         send_rooms_info(fd);
     }
@@ -64,7 +64,7 @@ bool GameManager::is_new_fd(int fd)
 
 void GameManager::add_player(int fd)
 {
-    players.push_back(make_shared<Player>(fd, "", 0));
+    players.push_back(make_shared<Player>(fd, -1, "", 0));
     socket_manager.send_message(fd, ENTER_NAME_MASSAGE);
 }
 
@@ -85,30 +85,52 @@ void GameManager::set_name(int fd, const string &name)
 
 void GameManager::send_rooms_info(int fd)
 {
-    // socket_manager.send_message(fd, get_rooms_info());
+    socket_manager.send_message(fd, get_rooms_info());
     socket_manager.send_message(fd, SELECT_ROOM_MASSAGE);
 }
 
 bool GameManager::can_join_room(const string &room_number)
 {
-    // for (auto &room : rooms)
-    //     if (room.get_ID() == stoi(room_number))
-    //         if (room.is_full())
-    //             return false;
-    //         else
-    //             return true;
-    // return false;
-    return true;
+    for (auto &room : rooms)
+        if (room.get_ID() == stoi(room_number))
+        {
+            if (room.is_full())
+                return false;
+            else
+                return true;
+        }
+    return false;
 }
 
 void GameManager::join_room(int fd, const string &room_number)
 {
-    // for (auto &room : rooms)
-    //     if (room.get_ID() == stoi(room_number))
-    //         socket_manager.send_message(fd, room.get_connection_info());
-    string player_name;
     for (auto &player : players)
         if (player->fd == fd)
-            player_name = player->name;
-    socket_manager.send_message(fd, "You joined room " + room_number + " as " + player_name);
+            rooms[stoi(room_number)].add_player(player);
+    for (auto &room : rooms)
+        if (room.get_ID() == stoi(room_number))
+            socket_manager.send_message(fd, "$" + room.get_connection_info());
+}
+
+string GameManager::get_rooms_info()
+{
+    string info = "";
+    for (auto &room : rooms)
+    {
+        info += "Room " + to_string(room.get_ID()) + " " +
+                "have " + to_string(room.get_players().size()) + " players\n";
+        info += "\tPlayers:\n";
+        for (auto &player : room.get_players())
+            info += "\t\t" + player->name + " " + to_string(player->score) + "\n";
+    }
+    return info;
+}
+
+void GameManager::create_rooms(int room_count)
+{
+    for (int i = 0; i < room_count; i++)
+    {
+        ++UID;
+        rooms.push_back(Room(i, &poll_manager, ip, port + UID, UID));
+    }
 }

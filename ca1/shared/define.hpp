@@ -16,6 +16,8 @@
 #include <unistd.h>
 #include <cstring>
 #include <memory>
+#include <signal.h>
+#include <fcntl.h>
 
 using namespace std;
 
@@ -44,18 +46,35 @@ using namespace std;
 #define SELECT_ROOM_MASSAGE "Select a room: "
 #define CANT_JOIN_ROOM_MASSAGE "You can't join this room"
 
+// Define system messages
+
+
 // Define constants
 const pair<int, string> NO_NEW_MASSAGE = {-1, ""};
 
 #define SERVER 0
 #define CLIENT 1
 
+// Define move
+#define NO_MOVE -1
+#define ROCK 0
+#define PAPER 1
+#define SCISSORS 2
+
+// Define limits
+#define GAME_TIME 10
+
+
+
 typedef struct Player
 {
     int fd;
+    int sub_fd;
     string name;
     int score;
-    Player(int fd, const string &name, int score) : fd(fd), name(name), score(score) {}
+    bool is_fd_set = false;
+    int move = NO_MOVE;
+    Player(int fd, int sub_fd, const string &name, int score) : fd(fd), sub_fd(fd), name(name), score(score) {}
 } Player;
 
 #endif

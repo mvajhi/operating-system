@@ -112,6 +112,7 @@ int SocketManager::setup_socket(const char *ip, int port, sockaddr_in &addr)
 
     handle_invalid_ip(ip, &addr);
     int socket_fd = create_socket(PF_INET, SOCK_STREAM, 0);
+    // int socket_fd = create_socket(PF_INET, SOCK_DGRAM, 0);
     set_socket_options(socket_fd, SOL_SOCKET, SO_REUSEADDR, 1);
     set_socket_options(socket_fd, SOL_SOCKET, SO_REUSEPORT, 1);
 
@@ -123,7 +124,6 @@ int SocketManager::setup_socket(const char *ip, int port, sockaddr_in &addr)
 
 SocketManager::SocketManager(int manager_code_, PollManager *poll_manager_)
 {
-    cout << "mag code: " << manager_code_ << endl;
     poll_manager = poll_manager_;
     manager_code = manager_code_;
 }

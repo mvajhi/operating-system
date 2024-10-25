@@ -13,11 +13,13 @@ public:
 
 private:
     vector<shared_ptr<Player>> players;
-    // vector<Room> rooms;
+    vector<Room> rooms;
     PollManager poll_manager;
     SocketManager socket_manager;
     int UID;
     int main_ID;
+    const char* ip;
+    int port;
 
     void main_handler();
     // void end_game();
@@ -29,6 +31,8 @@ private:
     // string get_rooms_info();
     bool can_join_room(const string& room_number);
     void join_room(int fd, const string& room_number);
+    string get_rooms_info();
+    void create_rooms(int room_count);
 
 };
 

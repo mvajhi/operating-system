@@ -22,6 +22,10 @@ int main(int argc, char *argv[])
     try
     {
         int server_fd = manager.create_client_socket(ipaddr, port);
+        int room_fd = -1;
+        bool flag_name = true;
+        auto out_fd = server_fd;
+        string name;
 
         while (true)
         {
@@ -29,10 +33,27 @@ int main(int argc, char *argv[])
             {
                 auto [fd, m] = manager.receive();
                 if (fd == STDIN_FILENO)
-                    manager.send_message(server_fd, m);
+                {
+                    manager.send_message(out_fd, m);
+                    if (flag_name)
+                    {
+                        name = m;
+                        flag_name = false;
+                    }
+                }
                 else if (fd != -1)
                 {
                     cout << "Received from fd " << fd << ": " << m << endl;
+                    if (m[0] == '$')
+                    {
+                        // input: $ip port
+                        string ip = m.substr(1, m.find(' ') - 1);
+                        int port = stoi(m.substr(m.find(' ') + 1));
+                        cout << "Connecting to " << ip << " " << port << endl;
+                        room_fd = manager.create_client_socket(ip.c_str(), port);
+                        manager.send_message(room_fd, name);
+                        out_fd = room_fd;
+                    }
                 }
             }
         }
