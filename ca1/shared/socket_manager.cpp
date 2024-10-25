@@ -186,7 +186,7 @@ int SocketManager::create_client_socket(const char *ip, int port)
 
 int SocketManager::accept_connection(int server_fd)
 {
-    cout << "Accepting new connection\n";
+    print(ACCEPTING_CONNECTION);
     struct sockaddr_in new_addr;
     socklen_t new_size = sizeof(new_addr);
     int new_fd = accept(server_fd, (struct sockaddr *)(&new_addr), &new_size);

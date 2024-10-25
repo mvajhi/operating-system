@@ -5,10 +5,12 @@
 #include "room.hpp"
 #include "socket_manager.hpp"
 #include "poll_manager.hpp"
+#include "print.hpp"
 
-class GameManager {
+class GameManager
+{
 public:
-    GameManager(const char* ip, int port, int room_count);
+    GameManager(const char *ip, int port, int room_count);
     void handler();
     void check_routine();
 
@@ -19,28 +21,51 @@ private:
     SocketManager socket_manager;
     int UID;
     int main_ID;
-    const char* ip;
+    const char *ip;
     int port;
     int time_UID;
     int timer_fd;
     int broadcast_fd;
 
+    // Game management methods
     void main_handler();
-    void end_game();
-    bool is_end_game(const string& m);
-    bool is_new_fd(int fd);
-    void add_player(int fd);
-    bool have_name(int fd);
-    void set_name(int fd, const string& name);
-    void send_rooms_info(int fd);
-    bool can_join_room(const string& room_number);
-    void join_room(int fd, const string& room_number);
-    string get_rooms_info();
+    void handle_stdin(string &m);
+    void handle_massage_main(string &m, int &fd);
+    void handle_normal_massage(string &m, int &fd);
+
+    // Setup methods
+    void setup_connection();
+    void setup_timer();
     void create_rooms(int room_count);
-    void send_leader_board();
-    void send_all(const string& message);
+
+    // New player methods
+    void add_player(int fd);
+    void set_name(int fd, const string &name);
+
+    // end game methods
+    void end_game();
     void close_program();
 
+    // Connection P2R methods
+    void join_room(int fd, const string &room_number);
+    void pass_room_to_player(const string &room_number, int fd);
+    void pass_player_to_room(int fd, const string &room_number);
+
+    // Send methods
+    void send_rooms_info(int fd);
+    void send_leader_board();
+    void send_all(const string &message);
+
+    // Get Room info methods
+    string get_rooms_info();
+    string get_room_info(Room &room);
+
+    // Condition methods
+    bool is_end_game(const string &m);
+    bool is_new_fd(int fd);
+    bool is_all_digit(const string &s);
+    bool can_join_room(const string &room_number);
+    bool have_name(int fd);
 };
 
-#endif 
+#endif

@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include <cstring>
 #include <algorithm>
-#include <iostream>
 #include <stdexcept>
 #include <unistd.h>
 #include <cstring>
@@ -20,14 +19,12 @@
 #include <fcntl.h>
 #include <time.h>
 #include <sys/timerfd.h>
+// #include <iostream>
 
 using namespace std;
 
-#define BUFFER_SIZE 1024
 #define STDIN 0
 #define STDOUT 1
-
-#define FIRST_UID 100
 
 // Define error messages
 #define ERR_SOCKET_CREATION "FAILED: Socket was not created"
@@ -42,6 +39,7 @@ using namespace std;
 
 // Define information messages
 #define NEW_CONNECTION_ACCEPTED "INFO: New connection accepted"
+#define ACCEPTING_CONNECTION "INFO: Accepting new connection\n"
 
 // Define user messages
 #define ENTER_NAME_MASSAGE "Enter your name: "
@@ -49,16 +47,18 @@ using namespace std;
 #define CANT_JOIN_ROOM_MASSAGE "You can't join this room"
 
 // Define system messages
-
+#define DC_MASSAGE "Disconnecting from sub server...\n"
+#define INVALID_ARG "Invalid Arguments\n"
+#define CLIENT_LAUNCHED "Client Launched!\n"
+#define SERVER_LAUNCHED "Server Launched!\n"
 
 // Define constants
 const pair<int, string> NO_NEW_MASSAGE = {-1, ""};
 
+// Define types
 #define SERVER 0
 #define CLIENT 1
 #define BROADCAST 2
-
-#define BIP "127.255.255.255"
 
 // Define move
 #define NO_MOVE -1
@@ -69,15 +69,24 @@ const pair<int, string> NO_NEW_MASSAGE = {-1, ""};
 // Define limits
 #define GAME_TIME 5
 
-#define SLEEP_TIME 0.5
-
-
+// Define time
+#define SLEEP_TIME 1
 #define TIMER_POLL_INTERVAL 1
 
+// Define codes
 #define DC_CODE "!$!"
 #define END_CODE "&%&"
+#define LIST_CODE "?"
+#define CONNECT_CODE '$'
 
+// Define commands
 #define END_GAME_COMMAND "end_game"
+
+// Define server customizations
+#define SERVER_BROADCAST_ENABLED false
+#define BIP "127.255.255.255"
+#define BUFFER_SIZE 1024
+#define FIRST_UID 100
 
 typedef struct Player
 {
@@ -89,5 +98,13 @@ typedef struct Player
     int move = NO_MOVE;
     Player(int fd, int sub_fd, const string &name, int score) : fd(fd), sub_fd(fd), name(name), score(score) {}
 } Player;
+
+typedef struct ConnectionDetails
+{
+    string ip;
+    int port;
+    string b_ip;
+    int b_port;
+} ConnectionDetails;
 
 #endif

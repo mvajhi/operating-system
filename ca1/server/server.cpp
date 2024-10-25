@@ -1,13 +1,16 @@
 #include "define.hpp"
 #include "game_manager.hpp"
+#include "print.hpp"
 
 int main(int argc, char *argv[])
 {
     if (argc != 4)
     {
-        cout << "Invalid Arguments\n";
+        print(INVALID_ARG);
         return 1;
     }
+
+    print(SERVER_LAUNCHED);
 
     const char *ipaddr = argv[1];
     int port = strtol(argv[2], NULL, 10);
@@ -25,7 +28,7 @@ int main(int argc, char *argv[])
     }
     catch (const runtime_error &e)
     {
-        cerr << e.what() << endl;
+        print(e.what());
         return 1;
     }
 

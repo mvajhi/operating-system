@@ -24,7 +24,7 @@ void Room::handler()
     if (poll_manager->check_poll() == UID)
     {
         auto [fd, m] = socket_manager.receive();
-        cout << "(sub " << room_ID << ")Received from fd " << fd << ": " << m << endl;
+        print("(sub " + to_string(room_ID) + ")Received from fd " + to_string(fd) + ": " + m + "\n");
         if (fd == broadcast_fd)
             return;
         if (!is_game_started)
@@ -61,7 +61,7 @@ void Room::prepare_game(int fd, string m)
 {
     if (m == "" && is_new_fd(fd))
     {
-        cout << "(sub " << room_ID << ")New player: " << fd << m << endl;
+        print("(sub " + to_string(room_ID) + ")New player: " + to_string(fd) + m + "\n");
         return;
     }
     else if (m != "" && (is_new_fd(fd) || is_unset_name(fd, m)))
@@ -71,7 +71,7 @@ void Room::prepare_game(int fd, string m)
         if (m.back() == '\n')
             m.pop_back();
 
-        cout << "(sub " << room_ID << ")Player " << m << " is ready" << endl;
+        print("(sub " + to_string(room_ID) + ")Player " + m + " is ready\n");
         set_fd(fd, m);
         send_message(fd, "Welcome " + m);
 
@@ -124,7 +124,7 @@ void Room::send_game_choice()
 string Room::get_connection_info()
 {
     return string(ip) + " " + to_string(port) + " " +
-     string(b_ip) + " " + to_string(b_port);
+           string(b_ip) + " " + to_string(b_port);
 }
 
 void Room::check_routine()

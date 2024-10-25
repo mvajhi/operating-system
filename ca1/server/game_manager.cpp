@@ -7,11 +7,20 @@ GameManager::GameManager(const char *ip_, int port_, int room_count)
     port = port_;
     main_ID = FIRST_UID;
     UID = FIRST_UID + 1;
+    setup_connection();
+    create_rooms(room_count);
+    setup_timer();
+}
+
+void GameManager::setup_connection()
+{
     broadcast_fd = socket_manager.create_broadcast_socket((const char *)BIP, port);
     socket_manager.create_server_socket(ip, port);
     socket_manager.add_stdin();
-    create_rooms(room_count);
+}
 
+void GameManager::setup_timer()
+{
     timer_fd = timerfd_create(CLOCK_REALTIME, 0);
     struct itimerspec timer_spec = {};
     timer_spec.it_value.tv_sec = TIMER_POLL_INTERVAL;
@@ -46,20 +55,28 @@ void GameManager::check_routine()
 void GameManager::main_handler()
 {
     auto [fd, m] = socket_manager.receive();
-     if (fd == STDIN_FILENO)
-    {
-        if (is_end_game(m))
-            end_game();
-        else
-            send_all(m);
-        return;
-    }
-    else if (fd == -1)
+
+    if (fd == STDIN_FILENO)
+        handle_stdin(m);
+    if (fd <= 0)
         return;
 
-    cout << "Received from fd " << fd << ": " << m << endl;
+    print("Received from fd " + to_string(fd) + ": " + m + "\n");
 
-    if (m == "?")
+    handle_massage_main(m, fd);
+}
+
+void GameManager::handle_stdin(string &m)
+{
+    if (is_end_game(m))
+        end_game();
+    else if (SERVER_BROADCAST_ENABLED)
+        send_all(m);
+}
+
+void GameManager::handle_massage_main(string &m, int &fd)
+{
+    if (m == LIST_CODE)
         send_rooms_info(fd);
     else if (is_new_fd(fd))
         add_player(fd);
@@ -70,14 +87,19 @@ void GameManager::main_handler()
         send_rooms_info(fd);
     }
     else
+        handle_normal_massage(m, fd);
+}
+
+void GameManager::handle_normal_massage(string &m, int &fd)
+{
+    if (m.back() == '\n')
+        m.pop_back();
+    if (is_all_digit(m) && can_join_room(m))
+        join_room(fd, m);
+    else
     {
-        if (can_join_room(m))
-            join_room(fd, m);
-        else
-        {
-            socket_manager.send_message(fd, CANT_JOIN_ROOM_MASSAGE);
-            send_rooms_info(fd);
-        }
+        socket_manager.send_message(fd, CANT_JOIN_ROOM_MASSAGE);
+        send_rooms_info(fd);
     }
 }
 
@@ -131,36 +153,46 @@ bool GameManager::can_join_room(const string &room_number)
 {
     for (auto &room : rooms)
         if (room.get_ID() == stoi(room_number))
-        {
-            if (room.is_full())
-                return false;
-            else
-                return true;
-        }
+            return !room.is_full();
     return false;
 }
 
 void GameManager::join_room(int fd, const string &room_number)
 {
+    pass_player_to_room(fd, room_number);
+    pass_room_to_player(room_number, fd);
+}
+
+void GameManager::pass_room_to_player(const string &room_number, int fd)
+{
+    for (auto &room : rooms)
+        if (room.get_ID() == stoi(room_number))
+            socket_manager.send_message(fd, CONNECT_CODE + room.get_connection_info());
+}
+
+void GameManager::pass_player_to_room(int fd, const string &room_number)
+{
     for (auto &player : players)
         if (player->fd == fd)
             rooms[stoi(room_number)].add_player(player);
-    for (auto &room : rooms)
-        if (room.get_ID() == stoi(room_number))
-            socket_manager.send_message(fd, "$" + room.get_connection_info());
 }
 
 string GameManager::get_rooms_info()
 {
-    string info = "";
+    string out = "\n";
     for (auto &room : rooms)
-    {
-        info += "Room " + to_string(room.get_ID()) + " " +
-                "have " + to_string(room.get_players().size()) + " players\n";
-        info += "\tPlayers:\n";
-        for (auto &player : room.get_players())
-            info += "\t\t" + player->name + " " + to_string(player->score) + "\n";
-    }
+        out += get_room_info(room);
+    return out;
+}
+
+string GameManager::get_room_info(Room &room)
+{
+    string info = "";
+    info += "Room " + to_string(room.get_ID()) + " " +
+            "have " + to_string(room.get_players().size()) + " players\n";
+    info += "\tPlayers:\n";
+    for (auto &player : room.get_players())
+        info += "\t\t" + player->name + " with score " + to_string(player->score) + "\n";
     return info;
 }
 
@@ -169,15 +201,16 @@ void GameManager::create_rooms(int room_count)
     for (int i = 0; i < room_count; i++)
     {
         ++UID;
-        rooms.push_back(Room(i, &poll_manager, ip, port + UID, UID, BIP, port + UID+100));
+        rooms.push_back(Room(i, &poll_manager, ip, port + UID, UID, BIP, port + UID + 100));
     }
 }
 
 void GameManager::send_leader_board()
 {
-    string massage = "Leader Board\n";
     sort(players.begin(), players.end(), [](shared_ptr<Player> a, shared_ptr<Player> b)
          { return a->score > b->score; });
+
+    string massage = "\nLeader Board\n";
     int p_size = players.size();
     for (int i = 0; i < p_size; i++)
         massage += to_string(i + 1) + ". " + players[i]->name + " " + to_string(players[i]->score) + "\n";
@@ -199,4 +232,9 @@ void GameManager::close_program()
     for (auto &room : rooms)
         room.close_all_socket();
     exit(0);
+}
+
+bool GameManager::is_all_digit(const string &s)
+{
+    return all_of(s.begin(), s.end(), ::isdigit);
 }

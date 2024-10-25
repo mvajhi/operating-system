@@ -2,8 +2,10 @@
 #define POLL_MANAGER_HPP
 
 #include "define.hpp"
+#include "print.hpp"
 
-class PollManager {
+class PollManager
+{
 public:
     void add_descriptor(int owner, int fd, short events);
     int check_poll();
