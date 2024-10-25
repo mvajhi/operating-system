@@ -112,7 +112,6 @@ int SocketManager::setup_socket(const char *ip, int port, sockaddr_in &addr)
 
     handle_invalid_ip(ip, &addr);
     int socket_fd = create_socket(PF_INET, SOCK_STREAM, 0);
-    // int socket_fd = create_socket(PF_INET, SOCK_DGRAM, 0);
     set_socket_options(socket_fd, SOL_SOCKET, SO_REUSEADDR, 1);
     set_socket_options(socket_fd, SOL_SOCKET, SO_REUSEPORT, 1);
 
@@ -148,6 +147,29 @@ int SocketManager::create_server_socket(const char *ip, int port)
     return server_fd;
 }
 
+int SocketManager::create_broadcast_socket(const char *ip, int port, bool poll)
+{
+    int b_socket, broadcast = 1, opt = 1;
+    struct sockaddr_in bc_address;
+
+    b_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    setsockopt(b_socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
+    setsockopt(b_socket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
+
+    bc_address.sin_family = AF_INET;
+    bc_address.sin_port = htons(port);
+    bc_address.sin_addr.s_addr = inet_addr(ip);
+
+    bind_socket(b_socket, &bc_address);
+
+    if (poll)
+        add_socket(b_socket, bc_address);
+
+    my_type[b_socket] = BROADCAST;
+    socket_map[b_socket] = bc_address;
+    return b_socket;
+}
+
 int SocketManager::create_client_socket(const char *ip, int port)
 {
     struct sockaddr_in server_addr;
@@ -163,6 +185,7 @@ int SocketManager::create_client_socket(const char *ip, int port)
 
 int SocketManager::accept_connection(int server_fd)
 {
+    cout << "Accepting new connection\n";
     struct sockaddr_in new_addr;
     socklen_t new_size = sizeof(new_addr);
     int new_fd = accept(server_fd, (struct sockaddr *)(&new_addr), &new_size);
@@ -184,7 +207,12 @@ pair<int, string> SocketManager::receive()
 void SocketManager::send_message(int socket_fd, const string &message)
 {
     if (socket_map.find(socket_fd) != socket_map.end())
-        send(socket_fd, message.c_str(), message.length(), 0);
+    {
+        if (my_type[socket_fd] == BROADCAST)
+            sendto(socket_fd, message.c_str(), message.length(), 0, (struct sockaddr *)&socket_map[socket_fd], sizeof(socket_map[socket_fd]));
+        else
+            send(socket_fd, message.c_str(), message.length(), 0);
+    }
     else
         throw runtime_error(ERR_SOCKET_NOT_FOUND);
 }

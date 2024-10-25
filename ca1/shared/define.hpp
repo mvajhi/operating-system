@@ -56,6 +56,9 @@ const pair<int, string> NO_NEW_MASSAGE = {-1, ""};
 
 #define SERVER 0
 #define CLIENT 1
+#define BROADCAST 2
+
+#define BIP "127.255.255.255"
 
 // Define move
 #define NO_MOVE -1

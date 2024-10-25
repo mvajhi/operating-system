@@ -23,6 +23,7 @@ private:
     int port;
     int time_UID;
     int timer_fd;
+    int broadcast_fd;
 
     void main_handler();
     void end_game();

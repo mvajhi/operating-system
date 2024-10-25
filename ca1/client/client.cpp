@@ -22,6 +22,9 @@ int main(int argc, char *argv[])
     try
     {
         int server_fd = manager.create_client_socket(ipaddr, port);
+
+        int broadcast_fd = -1;
+        broadcast_fd = manager.create_broadcast_socket(BIP, port, true);
         int room_fd = -1;
         bool flag_name = true;
         auto out_fd = server_fd;
@@ -40,6 +43,10 @@ int main(int argc, char *argv[])
                         name = m;
                         flag_name = false;
                     }
+                }
+                else if (fd == broadcast_fd)
+                {
+                    cout << "Received from broadcast: " << m << endl;
                 }
                 else if (fd != -1)
                 {

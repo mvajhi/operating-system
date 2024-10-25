@@ -7,6 +7,7 @@ GameManager::GameManager(const char *ip_, int port_, int room_count)
     port = port_;
     main_ID = FIRST_UID;
     UID = FIRST_UID + 1;
+    broadcast_fd = socket_manager.create_broadcast_socket((const char *)BIP, port);
     socket_manager.create_server_socket(ip, port);
     socket_manager.add_stdin();
     create_rooms(room_count);
@@ -45,10 +46,13 @@ void GameManager::check_routine()
 void GameManager::main_handler()
 {
     auto [fd, m] = socket_manager.receive();
-    if (fd == STDIN_FILENO)
+     if (fd == STDIN_FILENO)
     {
         if (is_end_game(m))
             end_game();
+        else
+            send_all(m);
+        return;
     }
     else if (fd == -1)
         return;
@@ -184,8 +188,9 @@ void GameManager::send_leader_board()
 // TODO: use broadcast
 void GameManager::send_all(const string &message)
 {
-    for (auto &player : players)
-        socket_manager.send_message(player->fd, message);
+    // for (auto &player : players)
+    //     socket_manager.send_message(player->fd, message);
+    socket_manager.send_message(broadcast_fd, message);
 }
 
 void GameManager::close_program()

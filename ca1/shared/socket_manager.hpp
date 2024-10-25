@@ -37,6 +37,7 @@ public:
     SocketManager(int manager_code_, PollManager* poll_manager_);
     void add_stdin();
     int create_server_socket(const char* ip, int port);
+    int create_broadcast_socket(const char* ip, int port, bool poll=false);
     int create_client_socket(const char* ip, int port);
     int accept_connection(int server_fd);
     pair<int, string> receive();
