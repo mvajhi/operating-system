@@ -3,7 +3,7 @@
 
 int main()
 {
-    Logger logger;
+    Logger logger("main");
     logger.log(LogLevel::INFO, "Hello, world!");
 
     return 0;

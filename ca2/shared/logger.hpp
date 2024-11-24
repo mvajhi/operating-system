@@ -6,12 +6,13 @@
 class Logger
 {
 public:
-    Logger();
+    Logger(string _sender_name) : sender_name(_sender_name) {};
 
     void log(LogLevel level, const string &message);
 
 private:
     string levelToString(LogLevel level);
+    string sender_name;
 };
 
 #endif

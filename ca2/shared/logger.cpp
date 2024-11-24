@@ -1,9 +1,5 @@
 #include "logger.hpp"
 
-Logger::Logger()
-{
-}
-
 void Logger::log(LogLevel level, const string &message)
 {
     time_t now = time(0);
@@ -14,7 +10,9 @@ void Logger::log(LogLevel level, const string &message)
 
     ostringstream logEntry;
     logEntry << "[" << timestamp << "] "
-             << levelToString(level) << ": " << message
+             << levelToString(level) 
+             << "(" << sender_name << ")"
+             << ": " << message
              << endl;
 
     cout << logEntry.str();
