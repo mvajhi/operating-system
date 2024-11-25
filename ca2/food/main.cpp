@@ -1,22 +1,24 @@
 #include "define.hpp"
 #include "logger.hpp"
 #include "manager.hpp"
+#include "unnamed_pipe.hpp"
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
+    if (argc != 4)
     {
         cerr << "Invalid Arguments" << endl;
         return 1;
     }
 
-    string program_name = argv[1];
-    string pipe_name = argv[2];
-
+    string program_name = argv[3];
     Logger logger(program_name);
-    logger.log(PIPE_READ, "Reading from pipe " + pipe_name);
+    int read_fd = atoi(argv[1]);
+    int write_fd = atoi(argv[2]);
 
-    Manager manager(&logger, program_name);
+    shared_ptr<UnnamedPipe> pipe = make_shared<UnnamedPipe>(&logger, read_fd, write_fd);
+
+    Manager manager(&logger, program_name, pipe);
 
     Item sum = manager.calc_sum();
 

@@ -2,6 +2,10 @@
 
 void Logger::log(LogLevel level, const string &message)
 {
+    if (sender_name != "berenj")
+    {
+        return;
+    }
     time_t now = time(0);
     tm *timeinfo = localtime(&now);
     char timestamp[20];
@@ -10,7 +14,7 @@ void Logger::log(LogLevel level, const string &message)
 
     ostringstream logEntry;
     logEntry << "[" << timestamp << "] "
-             << levelToString(level) 
+             << levelToString(level)
              << "(" << sender_name << ")"
              << ": " << message
              << endl;

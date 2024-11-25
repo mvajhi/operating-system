@@ -1,9 +1,22 @@
 #include "manager.hpp"
 
-Manager::Manager(Logger *_logger, string _name)
-    : logger(_logger), name(_name)
+vector<string> split(const string &s, char delimiter)
+{
+    vector<string> tokens;
+    string token;
+    istringstream tokenStream(s);
+    while (getline(tokenStream, token, delimiter))
+    {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+Manager::Manager(Logger *_logger, string _name, shared_ptr<UnnamedPipe> _pipe)
+    : logger(_logger), name(_name), pipe(_pipe)
 {
     get_warehouse();
+    create_pipes();
     get_items();
 }
 
@@ -14,13 +27,9 @@ Manager::~Manager()
 
 void Manager::get_warehouse()
 {
-    // TODO get with pipe
-    logger->log(PIPE_SEND, "I want to get warehouse list");
-    logger->log(PIPE_READ, "Reading from pipe");
-
-    warehouse.push_back("warehouse1");
-    warehouse.push_back("warehouse2");
-    warehouse.push_back("warehouse3");
+    string message = pipe->receive();
+    warehouse = split(message, SPLITER);
+    logger->log(DEBUG, "sample 3 Warehouse received: " + warehouse[2]);
 }
 
 void Manager::get_items()
@@ -32,21 +41,34 @@ void Manager::get_items()
     }
 }
 
+void Manager::create_pipes()
+{
+    for (auto i : warehouse)
+    {
+        string fifo_name = FIFO_DIR + name + i;
+        NamedPipe Npipe(logger, fifo_name);
+        Npipe.create();
+    }
+}
+
 Item Manager::get_item(string warehouse_name)
 {
-    // TODO connect to pipe
-
-    // TODO send my name and get data
-    logger->log(PIPE_SEND, "Sending " + warehouse_name + " to pipe");
-
-    logger->log(PIPE_READ, "Reading from pipe");
-    logger->log(PIPE_CLOSE, "Closing pipe");
+    string messages = read_row_data(warehouse_name);
     // TODO convert data to Item
+    vector<string> data = split(messages, SPLITER);
     Item result;
-    result.count = 10;
-    result.profit = 20;
-    result.remaining_cost = 15;
+    result.count = stoi(data[0]);
+    result.profit = stoi(data[1]);
+    result.remaining_cost = stoi(data[2]);
     return result;
+}
+
+string Manager::read_row_data(string &warehouse_name)
+{
+    string fifo_name = FIFO_DIR + name + warehouse_name;
+    NamedPipe Npipe(logger, fifo_name);
+    Npipe.open_for_reading();
+    return Npipe.read_from_pipe();
 }
 
 Item Manager::calc_sum()

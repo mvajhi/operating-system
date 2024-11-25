@@ -13,6 +13,9 @@
 #include <sys/wait.h>
 #include <cstdlib>
 #include <memory>
+#include <fcntl.h>
+#include <cstring>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -46,8 +49,10 @@ const bool INPUT = true;
 const bool OUTPUT = false;
 
 const string DATA_DIR = "stores/";
+const string FIFO_DIR = "tmp/";
 const string FOOD_FILE = "Parts.csv";
 const string WAREHOUSE_PATH = "./warehouse/out/main.out";
+const string FOOD_PATH = "./food/out/main.out";
 
 const int CSV_INDEX_NAME = 0;
 const int CSV_INDEX_PRICE = 1;

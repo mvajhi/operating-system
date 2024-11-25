@@ -15,9 +15,13 @@ vector<string> split(const string &s, char delimiter)
     return tokens;
 }
 
-void send_to_food_manager(string food, Item result)
+void send_to_food_manager(string food, Item result, Logger* logger, string program_name)
 {
-    string response = to_string(result.count) + "," + to_string(result.remaining_cost);
+    string response = to_string(result.count) + "," + to_string(result.profit) + "," + to_string(result.remaining_cost);
+    string fifo_name = FIFO_DIR + food + program_name;
+    NamedPipe Npipe(logger, fifo_name);
+    Npipe.open_for_writing();
+    Npipe.write_to_pipe(response);
 }
 
 int main(int argc, char *argv[])
@@ -44,7 +48,7 @@ int main(int argc, char *argv[])
     for (auto food : tokens)
     {
         Item result = manager.get_total(food);
-        send_to_food_manager(food, result);
+        send_to_food_manager(food, result, &logger, program_name);
         logger.log(DEBUG, food + "," + to_string(result.count) + "," + to_string(result.profit) + "," + to_string(result.remaining_cost));
         profit += result.profit;
     }
