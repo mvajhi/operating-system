@@ -37,13 +37,13 @@ typedef vector<vector<string>> CSV;
 
 typedef struct Transaction {
     int count;
-    int price;
+    double price;
     bool type;
 } Transaction;
 
 typedef struct Item {
     int count;
-    int profit;
+    double profit;
     int remaining_cost;
 } Item;
 
@@ -69,4 +69,3 @@ const int BUFFER_SIZE = 1024;
 const char SPLITER = ',';
 
 #endif
-// TODO convet to float

@@ -4,12 +4,12 @@ void Logger::log(LogLevel level, const string &message)
 {
     // ?INFO: true for showing logs, false for hiding logs
     map<LogLevel, bool> mask_log = {
-        {DEBUG, true},
+        {DEBUG, false},
         {OTHER, false},
         {CREATE_PIPE, false},
         {CREATE_CHILD, true},
         {PIPE_READ, false},
-        {PIPE_SEND, false},
+        {PIPE_SEND, true},
         {PIPE_CLOSE, false},
         {CSV_READ, true},
         {RESULT, true},

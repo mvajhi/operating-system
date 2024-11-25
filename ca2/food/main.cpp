@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     Item sum = manager.calc_sum();
 
     logger.log(RESULT, "Total count: " + to_string(sum.count) + " Total profit: " +
-                           to_string(sum.profit) + " Total remaining cost: " + to_string(sum.remaining_cost));
+                           to_string((int)sum.profit) + " Total remaining cost: " + to_string(sum.remaining_cost));
 
     logger.log(END, "End of " + program_name);
     return 0;

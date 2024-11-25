@@ -10,11 +10,12 @@ void Manager::create_io_log()
     {
         Transaction transaction;
         transaction.count = stoi(row[CSV_INDEX_COUNT]);
-        transaction.price = stoi(row[CSV_INDEX_PRICE]);
+        transaction.price = stod(row[CSV_INDEX_PRICE]);
         transaction.type = CSV_INPUT == row[CSV_INDEX_TYPE];
         io_log[row[CSV_INDEX_NAME]].push_back(transaction);
-        // logger->log(DEBUG, "Transaction: " + row[CSV_INDEX_NAME] + " " + to_string(transaction.count) + " " + to_string(transaction.price) + " " + to_string(transaction.type));
+        logger->log(DEBUG, "Transaction: " + row[CSV_INDEX_NAME] + " " + to_string(transaction.count) + " " + to_string(transaction.price) + " " + to_string(transaction.type));
     }
+
     logger->log(OTHER, "Created io log for " + name);
 }
 

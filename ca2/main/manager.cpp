@@ -122,15 +122,15 @@ void Manager::create_food_managers(string foods_names)
 
 void Manager::send_to_warehouse(string message)
 {
-    int profit = 0;
+    double profit = 0;
     for (auto name : v_w_names)
     {
         create_warehouse_manager(name);
-        int tmp = stoi(warehouse_managers[name]->send_and_receive(message));
+        double tmp = stod(warehouse_managers[name]->send_and_receive(message));
         profit += tmp;
-        logger->log(DEBUG, "Profit for " + name + ": " + to_string(tmp));
+        logger->log(DEBUG, "Profit for " + name + ": " + to_string((int)tmp));
     }
-    logger->log(RESULT, "Total profit: " + to_string(profit));
+    logger->log(RESULT, "Total profit: " + to_string((int)profit));
     sleep(1);
 }
 

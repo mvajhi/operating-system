@@ -57,7 +57,7 @@ Item Manager::get_item(string warehouse_name)
 
     Item result;
     result.count = stoi(data[0]);
-    result.profit = stoi(data[1]);
+    result.profit = stod(data[1]);
     result.remaining_cost = stoi(data[2]);
     return result;
 }
