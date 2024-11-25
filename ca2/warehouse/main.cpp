@@ -18,5 +18,10 @@ int main(int argc, char *argv[])
 
     Manager manager(&logger, program_name);
 
+    auto tmp = manager.get_total("shekar");
+    logger.log(DEBUG, "Total: " + to_string(tmp.count) + " " + to_string(tmp.profit) + " " + to_string(tmp.remaining_cost));
+    tmp = manager.get_total("berenj");
+    logger.log(DEBUG, "Total: " + to_string(tmp.count) + " " + to_string(tmp.profit) + " " + to_string(tmp.remaining_cost));
+
     return 0;
 }

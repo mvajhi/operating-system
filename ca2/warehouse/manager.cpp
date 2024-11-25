@@ -18,28 +18,28 @@ void Manager::create_io_log()
     logger->log(OTHER, "Created io log for " + name);
 }
 
-void Manager::create_total()
+Item Manager::create_item(pair<const string, vector<Transaction>> entry)
 {
-    for (const auto &entry : io_log)
+    Item item;
+    item.count = 0;
+    item.profit = 0;
+    item.remaining_cost = 0;
+    calc_profit(entry, item);
+    calc_cost_and_count(entry, item);
+    return item;
+}
+
+Item Manager::get_total(string name)
+{
+    if (io_log.find(name) == io_log.end())
     {
         Item item;
         item.count = 0;
         item.profit = 0;
         item.remaining_cost = 0;
-        total[entry.first] = item;
+        return item;
     }
-
-    for (const auto &entry : io_log)
-        create_item(entry);
-    logger->log(OTHER, "Created total for " + name);
-}
-
-void Manager::create_item(pair<const string, vector<Transaction>> entry)
-{
-    Item item = total[entry.first];
-    calc_profit(entry, item);
-    calc_cost_and_count(entry, item);
-    total[entry.first] = item;
+    return create_item(pair<string, vector<Transaction>>(name, io_log[name]));
 }
 
 void Manager::calc_cost_and_count(const pair<const string, vector<Transaction>> &entry, Item &item)
@@ -83,9 +83,6 @@ Manager::Manager(Logger *_logger, string _name)
     : logger(_logger), name(_name)
 {
     create_io_log();
-    create_total();
-    for (const auto &entry : total)
-        logger->log(OTHER, "Item: " + entry.first + " Count: " + to_string(entry.second.count) + " Profit: " + to_string(entry.second.profit) + " Remaining Cost: " + to_string(entry.second.remaining_cost));
     // TODO create pipes
 }
 
