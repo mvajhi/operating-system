@@ -5,6 +5,10 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <unistd.h>
+#include <string>
+#include <vector>
+
 using namespace std;
 
 enum LogLevel
