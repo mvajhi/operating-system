@@ -7,11 +7,14 @@ int main()
 {
     Logger logger("main");
 
+    Manager manager(&logger);
+
+    manager.show_items();
+
     string foods_name;
     cin >> foods_name;
     cout << foods_name << endl;
 
-    Manager manager(&logger);
 
     manager.create_food_managers(foods_name);
     manager.send_to_warehouse(foods_name);

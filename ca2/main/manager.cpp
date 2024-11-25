@@ -134,16 +134,40 @@ void Manager::send_to_warehouse(string message)
     sleep(1);
 }
 
+void printTable(const vector<vector<string>> &data)
+{
+    size_t maxWidth = 0;
+    for (const auto &row : data)
+    {
+        for (const auto &cell : row)
+        {
+            maxWidth = max(maxWidth, cell.size());
+        }
+    }
+    maxWidth += 2;
+
+    const string rowBorder = "\033[1;34m" + string(maxWidth * data[0].size() + data[0].size() + 1, '-') + "\033[0m";
+
+    cout << rowBorder << endl;
+    for (const auto &row : data)
+    {
+        cout << "\033[1;33m|\033[0m";
+        for (const auto &cell : row)
+        {
+            cout << " \033[1;32m" << left << setw(maxWidth - 1) << cell << "\033[1;33m|\033[0m";
+        }
+        cout << endl;
+        cout << rowBorder << endl;
+    }
+}
+
 void Manager::show_items()
 {
     csv_reader reader(DATA_DIR + FOOD_FILE);
 
-    auto data = reader.read()[0];
+    auto data = reader.read();
     logger->log(CSV_READ, "Read " + to_string(data.size()) + " cell from " + FOOD_FILE);
 
-    // TODO show menu
-    for (string cell : split(data[0], SPLITER))
-    {
-        logger->log(OTHER, cell);
-    }
+    printTable(data);
+    cout << "\033[1;36mEnter your items separated by commas (shekar,berenj,e.g.):\033[0m ";
 }
