@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+#include <filesystem>
+#include <map>
 
 using namespace std;
 
@@ -19,5 +21,10 @@ enum LogLevel
     ERROR,
     CRITICAL
 };
+
+typedef vector<vector<string>> CSV;
+
+const string DATA_DIR = "stores/";
+const string FOOD_FILE = "Parts.csv";
 
 #endif
