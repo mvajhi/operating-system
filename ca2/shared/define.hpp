@@ -16,10 +16,13 @@ using namespace std;
 enum LogLevel
 {
     DEBUG,
-    INFO,
-    WARNING,
-    ERROR,
-    CRITICAL
+    OTHER,
+    CREATE_PIPE,
+    CREATE_CHILD,
+    PIPE_READ,
+    PIPE_SEND,
+    PIPE_CLOSE,
+    CSV_READ
 };
 
 typedef vector<vector<string>> CSV;

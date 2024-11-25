@@ -8,7 +8,7 @@ int main()
     Logger logger("main");
     Manager manager(&logger);
 
-    manager.create_warehouse_manager();
+    manager.create_warehouse_managers();
 
     return 0;
 }
