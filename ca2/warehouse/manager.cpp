@@ -2,7 +2,7 @@
 
 void Manager::create_io_log()
 {
-    string filename = "../" + DATA_DIR + name + ".csv";
+    string filename = "./" + DATA_DIR + name + ".csv";
     csv_reader reader(filename);
     CSV data = reader.read();
     logger->log(CSV_READ, "Read " + to_string(data.size()) + " rows from " + filename);

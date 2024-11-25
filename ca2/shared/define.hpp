@@ -10,6 +10,9 @@
 #include <vector>
 #include <filesystem>
 #include <map>
+#include <sys/wait.h>
+#include <cstdlib>
+#include <memory>
 
 using namespace std;
 
@@ -44,6 +47,7 @@ const bool OUTPUT = false;
 
 const string DATA_DIR = "stores/";
 const string FOOD_FILE = "Parts.csv";
+const string WAREHOUSE_PATH = "./warehouse/out/main.out";
 
 const int CSV_INDEX_NAME = 0;
 const int CSV_INDEX_PRICE = 1;
@@ -52,5 +56,9 @@ const int CSV_INDEX_TYPE = 3;
 
 const string CSV_INPUT = "input\r";
 const string CSV_OUTPUT = "output\r";
+
+const int BUFFER_SIZE = 1024;
+
+const char SPLITER = ',';
 
 #endif
