@@ -2,10 +2,24 @@
 
 void Logger::log(LogLevel level, const string &message)
 {
-    // if (sender_name != "shekar")
-    // {
-    //     return;
-    // }
+    // ?INFO: true for showing logs, false for hiding logs
+    map<LogLevel, bool> mask_log = {
+        {DEBUG, true},
+        {OTHER, false},
+        {CREATE_PIPE, false},
+        {CREATE_CHILD, true},
+        {PIPE_READ, false},
+        {PIPE_SEND, false},
+        {PIPE_CLOSE, false},
+        {CSV_READ, true},
+        {RESULT, true},
+        {END, true},
+        };
+
+    if (!mask_log[level])
+    {
+        return;
+    }
     time_t now = time(0);
     tm *timeinfo = localtime(&now);
     char timestamp[20];
@@ -42,6 +56,10 @@ string Logger::levelToString(LogLevel level)
         return "\033[33mPIPE_CLOSE\033[0m"; // Yellow
     case CSV_READ:
         return "\033[90mCSV_READ\033[0m"; // Bright Black
+    case RESULT:
+        return "\033[35mRESULT\033[0m"; // Magenta
+    case END:
+        return "\033[31mEND\033[0m"; // Red
     default:
         return "\033[37mUNKNOWN\033[0m"; // White
     }

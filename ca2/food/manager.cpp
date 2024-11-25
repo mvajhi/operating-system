@@ -41,35 +41,20 @@ void Manager::get_warehouse()
 void Manager::get_items()
 {
     for (auto i : warehouse)
-    {
-        // pid_t pid = fork();
-        // if (pid == 0)
-        // {
-        get_item(i);
-        logger->log(DEBUG, "Item " + i + " added to items");
-        // exit(EXIT_SUCCESS);
-        // }
-        // sleep(1);
-    }
+        items.push_back(get_item(i));
 }
 
 void Manager::create_pipes()
 {
-    for (auto i : warehouse)
-    {
-        // string fifo_name = FIFO_DIR + name + i;
-        // NamedPipe Npipe(logger, fifo_name);
-        // Npipe.create();
-        // Npipe.close_pipe();
-    }
     pipe->send("done");
 }
 
 Item Manager::get_item(string warehouse_name)
 {
     string messages = read_row_data(warehouse_name);
-    // TODO convert data to Item
+
     vector<string> data = split(messages, SPLITER);
+
     Item result;
     result.count = stoi(data[0]);
     result.profit = stoi(data[1]);
@@ -80,16 +65,15 @@ Item Manager::get_item(string warehouse_name)
 string Manager::read_row_data(string &warehouse_name)
 {
     const string fifo_name = FIFO_DIR + name + warehouse_name;
-    // NamedPipe parent_pipe(logger, fifo_name);
     nps[warehouse_name] = make_shared<NamedPipe>(logger, fifo_name);
+
     auto parent_pipe = nps[warehouse_name];
     parent_pipe->create();
     parent_pipe->open_for_reading();
     string message = parent_pipe->read_from_pipe();
-    logger->log(DEBUG, warehouse_name + " !?! : Message received from FIFO: " + message);
+    
+    logger->log(DEBUG, "result " + warehouse_name + ": " + message);
     parent_pipe->close_pipe();
-    // parent_pipe.remove_pipe();
-    // pipe->send("done");
     return message;
 }
 

@@ -14,7 +14,6 @@ vector<string> split(const string &s, char delimiter)
 
 void Manager::create_food_manager(string name)
 {
-    // TODO create food manager
     shared_ptr<UnnamedPipe> pipe = make_shared<UnnamedPipe>(logger);
     int pid = fork();
     if (pid < 0)
@@ -93,7 +92,6 @@ void Manager::setup_warehouse_child(shared_ptr<UnnamedPipe> pipe, string &name)
 
 Manager::~Manager()
 {
-    // TODO close all pipes
 }
 
 Manager::Manager(Logger *_logger)
@@ -118,44 +116,34 @@ Manager::Manager(Logger *_logger)
 
 void Manager::create_food_managers(string foods_names)
 {
-    // TODO print items
-    // csv_reader reader(DATA_DIR + FOOD_FILE);
-
-    // CSV data = reader.read();
-    // logger->log(CSV_READ, "Read " + to_string(data.size()) + " rows from " + FOOD_FILE);
-
     for (string cell : split(foods_names, SPLITER))
         create_food_manager(cell);
-}
-
-void Manager::create_warehouse_managers()
-{
-    for (const auto &entry : filesystem::directory_iterator(DATA_DIR))
-    {
-        string filename = entry.path().filename().string();
-        if (filename == FOOD_FILE)
-            continue;
-        filename = entry.path().stem().string();
-        create_warehouse_manager(filename);
-    }
 }
 
 void Manager::send_to_warehouse(string message)
 {
     int profit = 0;
-    // for (const auto &entry : warehouse_managers)
-    // {
-    //     int tmp = stoi(entry.second->send_and_receive(message));
-    //     profit += tmp;
-    //     logger->log(DEBUG, "Profit for " + entry.first + ": " + to_string(tmp));
-    //     logger->log(OTHER, "Total profit: " + to_string(profit));
-    // }
     for (auto name : v_w_names)
     {
         create_warehouse_manager(name);
         int tmp = stoi(warehouse_managers[name]->send_and_receive(message));
         profit += tmp;
         logger->log(DEBUG, "Profit for " + name + ": " + to_string(tmp));
-        logger->log(OTHER, "Total profit: " + to_string(profit));
+    }
+    logger->log(RESULT, "Total profit: " + to_string(profit));
+    sleep(1);
+}
+
+void Manager::show_items()
+{
+    csv_reader reader(DATA_DIR + FOOD_FILE);
+
+    auto data = reader.read()[0];
+    logger->log(CSV_READ, "Read " + to_string(data.size()) + " cell from " + FOOD_FILE);
+
+    // TODO show menu
+    for (string cell : split(data[0], SPLITER))
+    {
+        logger->log(OTHER, cell);
     }
 }

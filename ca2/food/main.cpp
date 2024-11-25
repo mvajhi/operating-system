@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
 
     Manager manager(&logger, program_name, pipe);
 
+    Item sum = manager.calc_sum();
 
+    logger.log(RESULT, "Total count: " + to_string(sum.count) + " Total profit: " +
+                           to_string(sum.profit) + " Total remaining cost: " + to_string(sum.remaining_cost));
 
-    // Item sum = manager.calc_sum();
-
-    // logger.log(OTHER, "Total count: " + to_string(sum.count) + " Total profit: " + to_string(sum.profit) + " Total remaining cost: " + to_string(sum.remaining_cost));
-
+    logger.log(END, "End of " + program_name);
     return 0;
 }

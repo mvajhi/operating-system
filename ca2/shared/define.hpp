@@ -28,7 +28,9 @@ enum LogLevel
     PIPE_READ,
     PIPE_SEND,
     PIPE_CLOSE,
-    CSV_READ
+    CSV_READ,
+    RESULT,
+    END
 };
 
 typedef vector<vector<string>> CSV;
@@ -67,3 +69,4 @@ const int BUFFER_SIZE = 1024;
 const char SPLITER = ',';
 
 #endif
+// TODO convet to float

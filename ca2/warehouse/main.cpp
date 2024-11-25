@@ -10,15 +10,12 @@ vector<string> split(const string &s, char delimiter)
     string token;
     istringstream tokenStream(s);
     while (getline(tokenStream, token, delimiter))
-    {
         tokens.push_back(token);
-    }
     return tokens;
 }
 
 void send_to_food_manager(string food, Item result, Logger *logger, string program_name)
 {
-    // sleep(2);
     string message = to_string(result.count) + "," + to_string(result.profit) + "," + to_string(result.remaining_cost);
     const string fifo_name = FIFO_DIR + food + program_name;
     NamedPipe child_pipe(logger, fifo_name);
@@ -52,11 +49,13 @@ int main(int argc, char *argv[])
     {
         Item result = manager.get_total(food);
         send_to_food_manager(food, result, &logger, program_name);
-        logger.log(DEBUG, food + "," + to_string(result.count) + "," + to_string(result.profit) + "," + to_string(result.remaining_cost));
+        logger.log(DEBUG, food + "," + to_string(result.count) +
+                              "," + to_string(result.profit) + "," + to_string(result.remaining_cost));
         profit += result.profit;
     }
 
     pipe.send(to_string(profit));
 
+    logger.log(END, "End of " + program_name);
     return 0;
 }

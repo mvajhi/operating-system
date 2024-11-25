@@ -9,7 +9,6 @@ NamedPipe::NamedPipe(Logger *_logger, const string &name)
     : fifo_name(name), fd(-1), logger(_logger) {}
 
 NamedPipe::~NamedPipe() {
-    // close_pipe();
 }
 
 bool NamedPipe::create() {

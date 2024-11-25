@@ -83,10 +83,8 @@ Manager::Manager(Logger *_logger, string _name)
     : logger(_logger), name(_name)
 {
     create_io_log();
-    // TODO create pipes
 }
 
 Manager::~Manager()
 {
-    // TODO close all pipes
 }

@@ -29,8 +29,8 @@ public:
     Manager(Logger* _logger);
     ~Manager();
     void create_food_managers(string foods_names);
-    void create_warehouse_managers();
     void send_to_warehouse(string message);
+    void show_items();
 };
 
 #endif

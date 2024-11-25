@@ -13,10 +13,9 @@ int main()
 
     Manager manager(&logger);
 
-    // manager.create_warehouse_managers();
-
     manager.create_food_managers(foods_name);
     manager.send_to_warehouse(foods_name);
 
+    logger.log(END, "End of main");
     return 0;
 }

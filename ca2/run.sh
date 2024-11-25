@@ -5,7 +5,7 @@ make -C food
 make -C warehouse
 make -C main
 
-rm -rf tmp 
+rm -r tmp 
 mkdir tmp
 
 ./main/out/main.out
