@@ -5,6 +5,7 @@
 #include "logger.hpp"
 #include "csv_reader.hpp"
 #include "unnamed_pipe.hpp"
+#include "named_pipe.hpp"
 
 class Manager
 {

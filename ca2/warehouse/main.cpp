@@ -2,6 +2,7 @@
 #include "logger.hpp"
 #include "manager.hpp"
 #include "unnamed_pipe.hpp"
+#include "named_pipe.hpp"
 
 vector<string> split(const string &s, char delimiter)
 {
@@ -15,13 +16,15 @@ vector<string> split(const string &s, char delimiter)
     return tokens;
 }
 
-void send_to_food_manager(string food, Item result, Logger* logger, string program_name)
+void send_to_food_manager(string food, Item result, Logger *logger, string program_name)
 {
-    string response = to_string(result.count) + "," + to_string(result.profit) + "," + to_string(result.remaining_cost);
-    string fifo_name = FIFO_DIR + food + program_name;
-    NamedPipe Npipe(logger, fifo_name);
-    Npipe.open_for_writing();
-    Npipe.write_to_pipe(response);
+    // sleep(2);
+    string message = to_string(result.count) + "," + to_string(result.profit) + "," + to_string(result.remaining_cost);
+    const string fifo_name = FIFO_DIR + food + program_name;
+    NamedPipe child_pipe(logger, fifo_name);
+    child_pipe.open_for_writing();
+    child_pipe.write_to_pipe(message);
+    child_pipe.close_pipe();
 }
 
 int main(int argc, char *argv[])
@@ -54,11 +57,6 @@ int main(int argc, char *argv[])
     }
 
     pipe.send(to_string(profit));
-
-    // auto tmp = manager.get_total("shekar");
-    // logger.log(DEBUG, "Total: " + to_string(tmp.count) + " " + to_string(tmp.profit) + " " + to_string(tmp.remaining_cost));
-    // tmp = manager.get_total("berenj");
-    // logger.log(DEBUG, "Total: " + to_string(tmp.count) + " " + to_string(tmp.profit) + " " + to_string(tmp.remaining_cost));
 
     return 0;
 }

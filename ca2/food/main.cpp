@@ -2,6 +2,7 @@
 #include "logger.hpp"
 #include "manager.hpp"
 #include "unnamed_pipe.hpp"
+#include "named_pipe.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -20,9 +21,11 @@ int main(int argc, char *argv[])
 
     Manager manager(&logger, program_name, pipe);
 
-    Item sum = manager.calc_sum();
 
-    logger.log(OTHER, "Total count: " + to_string(sum.count) + " Total profit: " + to_string(sum.profit) + " Total remaining cost: " + to_string(sum.remaining_cost));
+
+    // Item sum = manager.calc_sum();
+
+    // logger.log(OTHER, "Total count: " + to_string(sum.count) + " Total profit: " + to_string(sum.profit) + " Total remaining cost: " + to_string(sum.remaining_cost));
 
     return 0;
 }

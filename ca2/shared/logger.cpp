@@ -2,10 +2,10 @@
 
 void Logger::log(LogLevel level, const string &message)
 {
-    if (sender_name != "berenj")
-    {
-        return;
-    }
+    // if (sender_name != "shekar")
+    // {
+    //     return;
+    // }
     time_t now = time(0);
     tm *timeinfo = localtime(&now);
     char timestamp[20];

@@ -14,6 +14,7 @@ private:
     vector<string> warehouse;
     vector<Item> items;
     shared_ptr<UnnamedPipe> pipe;
+    map<string,shared_ptr<NamedPipe>> nps;
 
     void get_warehouse();
     void get_items();

@@ -15,6 +15,7 @@ vector<string> split(const string &s, char delimiter)
 Manager::Manager(Logger *_logger, string _name, shared_ptr<UnnamedPipe> _pipe)
     : logger(_logger), name(_name), pipe(_pipe)
 {
+
     get_warehouse();
     create_pipes();
     get_items();
@@ -22,7 +23,12 @@ Manager::Manager(Logger *_logger, string _name, shared_ptr<UnnamedPipe> _pipe)
 
 Manager::~Manager()
 {
-    // TODO close all pipes
+    for (auto i : warehouse)
+    {
+        string fifo_name = FIFO_DIR + name + i;
+        NamedPipe Npipe(logger, fifo_name);
+        Npipe.remove_pipe();
+    }
 }
 
 void Manager::get_warehouse()
@@ -36,8 +42,14 @@ void Manager::get_items()
 {
     for (auto i : warehouse)
     {
-        items.push_back(get_item(i));
+        // pid_t pid = fork();
+        // if (pid == 0)
+        // {
+        get_item(i);
         logger->log(DEBUG, "Item " + i + " added to items");
+        // exit(EXIT_SUCCESS);
+        // }
+        // sleep(1);
     }
 }
 
@@ -45,10 +57,12 @@ void Manager::create_pipes()
 {
     for (auto i : warehouse)
     {
-        string fifo_name = FIFO_DIR + name + i;
-        NamedPipe Npipe(logger, fifo_name);
-        Npipe.create();
+        // string fifo_name = FIFO_DIR + name + i;
+        // NamedPipe Npipe(logger, fifo_name);
+        // Npipe.create();
+        // Npipe.close_pipe();
     }
+    pipe->send("done");
 }
 
 Item Manager::get_item(string warehouse_name)
@@ -65,10 +79,18 @@ Item Manager::get_item(string warehouse_name)
 
 string Manager::read_row_data(string &warehouse_name)
 {
-    string fifo_name = FIFO_DIR + name + warehouse_name;
-    NamedPipe Npipe(logger, fifo_name);
-    Npipe.open_for_reading();
-    return Npipe.read_from_pipe();
+    const string fifo_name = FIFO_DIR + name + warehouse_name;
+    // NamedPipe parent_pipe(logger, fifo_name);
+    nps[warehouse_name] = make_shared<NamedPipe>(logger, fifo_name);
+    auto parent_pipe = nps[warehouse_name];
+    parent_pipe->create();
+    parent_pipe->open_for_reading();
+    string message = parent_pipe->read_from_pipe();
+    logger->log(DEBUG, warehouse_name + " !?! : Message received from FIFO: " + message);
+    parent_pipe->close_pipe();
+    // parent_pipe.remove_pipe();
+    // pipe->send("done");
+    return message;
 }
 
 Item Manager::calc_sum()

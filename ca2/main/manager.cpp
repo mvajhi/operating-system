@@ -26,7 +26,9 @@ void Manager::create_food_manager(string name)
         setup_food_child(pipe, name);
 
     store_food_pipe(pipe, name);
-    pipe->send(w_names);
+
+    auto tmp = pipe->send_and_receive(w_names);
+
     logger->log(CREATE_CHILD, "Created food manager for " + name + " with pid " + to_string(pid));
 }
 
@@ -141,11 +143,19 @@ void Manager::create_warehouse_managers()
 void Manager::send_to_warehouse(string message)
 {
     int profit = 0;
-    for (const auto &entry : warehouse_managers)
+    // for (const auto &entry : warehouse_managers)
+    // {
+    //     int tmp = stoi(entry.second->send_and_receive(message));
+    //     profit += tmp;
+    //     logger->log(DEBUG, "Profit for " + entry.first + ": " + to_string(tmp));
+    //     logger->log(OTHER, "Total profit: " + to_string(profit));
+    // }
+    for (auto name : v_w_names)
     {
-        int tmp = stoi(entry.second->send_and_receive(message));
+        create_warehouse_manager(name);
+        int tmp = stoi(warehouse_managers[name]->send_and_receive(message));
         profit += tmp;
-        logger->log(DEBUG, "Profit for " + entry.first + ": " + to_string(tmp));
+        logger->log(DEBUG, "Profit for " + name + ": " + to_string(tmp));
+        logger->log(OTHER, "Total profit: " + to_string(profit));
     }
-    logger->log(OTHER, "Total profit: " + to_string(profit));
 }
