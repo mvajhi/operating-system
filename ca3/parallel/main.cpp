@@ -269,9 +269,23 @@ void infinite_impulse_response_filter() {
     writeWavFile(outputFile + "IIRF_parallel.wav", newAudioData, fileInfo);
 }
 
+void test_read()
+{
+    SF_INFO fileInfo;
+    std::vector<float> audioData;
+
+    std::memset(&fileInfo, 0, sizeof(fileInfo));
+
+    auto start = std::chrono::high_resolution_clock::now();
+    readWavFileParallel(inputFile, audioData, fileInfo);
+    auto end = std::chrono::high_resolution_clock::now();
+    cout << "Read parallel time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+}
 
 int main()
 {
+    test_read();
+
     Band_pass_filter_parallel();
 
     Notch_filter_parallel();
