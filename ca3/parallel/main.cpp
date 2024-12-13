@@ -65,7 +65,7 @@ void Band_pass_filter_parallel()
 
     std::memset(&fileInfo, 0, sizeof(fileInfo));
 
-    readWavFile(inputFile, audioData, fileInfo);
+    readWavFileParallel(inputFile, audioData, fileInfo);
 
     std::vector<float> newAudioData(audioData.size(), 0.0f);
 
@@ -119,7 +119,7 @@ void Notch_filter_parallel() {
 
     std::memset(&fileInfo, 0, sizeof(fileInfo));
 
-    readWavFile(inputFile, audioData, fileInfo);
+    readWavFileParallel(inputFile, audioData, fileInfo);
     std::vector<float> new_audioData(audioData.size(), 0.0f);
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -177,7 +177,7 @@ void finite_impulse_response_filter() {
 
     std::memset(&fileInfo, 0, sizeof(fileInfo));
 
-    readWavFile(inputFile, audioData, fileInfo);
+    readWavFileParallel(inputFile, audioData, fileInfo);
     std::vector<float> newAudioData(audioData.size(), 0.0f);
 
     for (int i = 0; i < M_FIRF; ++i) {
@@ -248,7 +248,7 @@ void infinite_impulse_response_filter() {
 
     std::memset(&fileInfo, 0, sizeof(fileInfo));
 
-    readWavFile(inputFile, audioData, fileInfo);
+    readWavFileParallel(inputFile, audioData, fileInfo);
     std::vector<float> newAudioData(audioData.size(), 0.0f);
 
     for (int i = 0; i < M_IIRF; ++i) {
@@ -284,6 +284,7 @@ void test_read()
 
 int main()
 {
+    auto start = std::chrono::high_resolution_clock::now();
     test_read();
 
     Band_pass_filter_parallel();
@@ -293,5 +294,8 @@ int main()
     finite_impulse_response_filter();
 
     infinite_impulse_response_filter();
+    auto end = std::chrono::high_resolution_clock::now();
+    cout << "Total parallel time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+
     return 0;
 }

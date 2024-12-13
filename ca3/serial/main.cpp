@@ -168,6 +168,7 @@ void test_read()
 
 int main()
 {
+    auto start = std::chrono::high_resolution_clock::now();
     test_read();
 
     Band_pass_filter();
@@ -177,6 +178,8 @@ int main()
     finite_impulse_response_filter();
 
     infinite_impulse_response_filter();
+    auto end = std::chrono::high_resolution_clock::now();
+    cout << "Total time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
 
     return 0;
 }
