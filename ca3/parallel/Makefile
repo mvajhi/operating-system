@@ -17,11 +17,11 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	mkdir -p $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-out/parallel.out: $(OBJS) $(SHARED_OBJS)
+out/VoiceFilter.out: $(OBJS) $(SHARED_OBJS)
 	mkdir -p out
 	$(CXX) $^ -o $@ $(CXXFLAGS)
 
 clean:
-	rm -rf $(OBJ_DIR) out/parallel.out
+	rm -rf $(OBJ_DIR) out/VoiceFilter.out
 
 .PHONY: all clean

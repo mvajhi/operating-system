@@ -14,7 +14,7 @@
 using namespace std;
 
 const string INPUT_FILE = "input.wav";
-const string OUTPUT_FILE = "./out/output_";
+const string OUTPUT_FILE = "./result/output_";
 
 const float CONST_BPF = 1.1;
 const float CONST_F0_NOTCH = 0.1;
