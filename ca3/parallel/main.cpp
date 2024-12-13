@@ -1,301 +1,286 @@
-#include <iostream>
-#include <sndfile.h>
-#include <vector>
-#include <string>
-#include <cstring>
-#include <cmath>
-#include <pthread.h>
-#include <chrono>
-#include "WavFileOperations.h"
+#include "define.hpp"
 
-using namespace std;
-
-float CONST_BPF = 1.1;
-
-std::string inputFile = "input.wav";
-std::string outputFile = "./out/output";
-
-
-struct ThreadData {
-    const std::vector<float>* audioData;
-    std::vector<float>* newAudioData;
-    int start;
-    int end;
-    std::vector<float>* h;
-    std::vector<float>* a;
-    std::vector<float>* b;
-    float power2_const;
-};
-
-void* processAudioData_BP(void* arg) {
-    ThreadData* data = static_cast<ThreadData*>(arg);
-    for (int i = data->start; i < data->end; ++i) {
-        auto power2 = pow((*data->audioData)[i], 2);
-        (*data->newAudioData)[i] = power2 / (power2 + data->power2_const);
+void *process_bp(void *arg)
+{
+    thread_data *data = static_cast<thread_data *>(arg);
+    for (int i = data->start; i < data->end; ++i)
+    {
+        auto power2 = pow((*data->audio_data)[i], 2);
+        (*data->new_audio_data)[i] = power2 / (power2 + data->power2_const);
     }
     return nullptr;
 }
 
-void parallelProcessAudioData_BP(const std::vector<float>& audioData, std::vector<float>& newAudioData, int numThreads) {
-    std::vector<pthread_t> threads(numThreads);
-    std::vector<ThreadData> threadData(numThreads);
+void parallel_bp(const vector<float> &audio_data, vector<float> &new_audio_data, int num_threads)
+{
+    vector<pthread_t> threads(num_threads);
+    vector<thread_data> thread_data(num_threads);
 
     float power2_const = pow(CONST_BPF, 2);
-    int chunkSize = audioData.size() / numThreads;
+    int chunk_size = audio_data.size() / num_threads;
 
-    for (int i = 0; i < numThreads; ++i) {
-        threadData[i].audioData = &audioData;
-        threadData[i].newAudioData = &newAudioData;
-        threadData[i].start = i * chunkSize;
-        threadData[i].end = (i == numThreads - 1) ? audioData.size() : (i + 1) * chunkSize;
-        threadData[i].power2_const = power2_const;
+    for (int i = 0; i < num_threads; ++i)
+    {
+        thread_data[i].audio_data = &audio_data;
+        thread_data[i].new_audio_data = &new_audio_data;
+        thread_data[i].start = i * chunk_size;
+        thread_data[i].end = (i == num_threads - 1) ? audio_data.size() : (i + 1) * chunk_size;
+        thread_data[i].power2_const = power2_const;
 
-        pthread_create(&threads[i], nullptr, processAudioData_BP, &threadData[i]);
+        pthread_create(&threads[i], nullptr, process_bp, &thread_data[i]);
     }
 
-    for (int i = 0; i < numThreads; ++i) {
+    for (int i = 0; i < num_threads; ++i)
+    {
         pthread_join(threads[i], nullptr);
     }
 }
 
-void Band_pass_filter_parallel()
+void band_pass_filter_parallel()
 {
-    SF_INFO fileInfo;
-    std::vector<float> audioData;
+    SF_INFO file_info;
+    vector<float> audio_data;
 
-    std::memset(&fileInfo, 0, sizeof(fileInfo));
+    memset(&file_info, 0, sizeof(file_info));
 
-    readWavFileParallel(inputFile, audioData, fileInfo);
+    readWavFileParallel(INPUT_FILE, audio_data, file_info);
 
-    std::vector<float> newAudioData(audioData.size(), 0.0f);
+    vector<float> new_audio_data(audio_data.size(), 0.0f);
 
-    auto start = std::chrono::high_resolution_clock::now();
-    parallelProcessAudioData_BP(audioData, newAudioData, 12);
-    auto end = std::chrono::high_resolution_clock::now();
-    cout << "BPF parallel time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+    auto start = chrono::high_resolution_clock::now();
+    parallel_bp(audio_data, new_audio_data, 12);
+    auto end = chrono::high_resolution_clock::now();
+    cout << "BPF parallel time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 
-    writeWavFile(outputFile + "Band_pass_parallel.wav", newAudioData, fileInfo);
+    writeWavFile(OUTPUT_FILE + "band_pass_parallel.wav", new_audio_data, file_info);
 }
 
-const float CONST_F0_NOTCH = 0.1;
-const int N_NOTCH = 2;
-
-
-void* processAudioData_notch(void* arg) {
-    ThreadData* data = static_cast<ThreadData*>(arg);
-    for (int i = data->start; i < data->end; ++i) {
-        (*data->newAudioData)[i] = 1 / (1 + pow((*data->audioData)[i] / CONST_F0_NOTCH, data->power2_const));
+void *process_notch(void *arg)
+{
+    thread_data *data = static_cast<thread_data *>(arg);
+    for (int i = data->start; i < data->end; ++i)
+    {
+        (*data->new_audio_data)[i] = 1 / (1 + pow((*data->audio_data)[i] / CONST_F0_NOTCH, data->power2_const));
     }
     pthread_exit(nullptr);
 }
 
-void parallelProcessAudioData_notch(std::vector<float> &audioData, std::vector<float> &new_audioData, size_t numThreads)
+void parallel_notch(vector<float> &audio_data, vector<float> &new_audio_data, size_t num_threads)
 {
     float power2_const = 2 * N_NOTCH;
 
-    pthread_t threads[numThreads];
-    ThreadData threadData[numThreads];
-    size_t chunkSize = audioData.size() / numThreads;
+    pthread_t threads[num_threads];
+    thread_data thread_data[num_threads];
+    size_t chunk_size = audio_data.size() / num_threads;
 
-    for (size_t i = 0; i < numThreads; ++i)
+    for (size_t i = 0; i < num_threads; ++i)
     {
-        threadData[i].audioData = &audioData;
-        threadData[i].newAudioData = &new_audioData;
-        threadData[i].start = i * chunkSize;
-        threadData[i].end = (i == numThreads - 1) ? audioData.size() : (i + 1) * chunkSize;
-        threadData[i].power2_const = power2_const;
-        pthread_create(&threads[i], nullptr, processAudioData_notch, &threadData[i]);
+        thread_data[i].audio_data = &audio_data;
+        thread_data[i].new_audio_data = &new_audio_data;
+        thread_data[i].start = i * chunk_size;
+        thread_data[i].end = (i == num_threads - 1) ? audio_data.size() : (i + 1) * chunk_size;
+        thread_data[i].power2_const = power2_const;
+        pthread_create(&threads[i], nullptr, process_notch, &thread_data[i]);
     }
 
-    for (size_t i = 0; i < numThreads; ++i)
+    for (size_t i = 0; i < num_threads; ++i)
     {
         pthread_join(threads[i], nullptr);
     }
 }
 
-void Notch_filter_parallel() {
-    SF_INFO fileInfo;
-    std::vector<float> audioData;
+void notch_filter_parallel()
+{
+    SF_INFO file_info;
+    vector<float> audio_data;
 
-    std::memset(&fileInfo, 0, sizeof(fileInfo));
+    memset(&file_info, 0, sizeof(file_info));
 
-    readWavFileParallel(inputFile, audioData, fileInfo);
-    std::vector<float> new_audioData(audioData.size(), 0.0f);
+    readWavFileParallel(INPUT_FILE, audio_data, file_info);
+    vector<float> new_audio_data(audio_data.size(), 0.0f);
 
-    auto start = std::chrono::high_resolution_clock::now();
-    parallelProcessAudioData_notch(audioData, new_audioData, 12);
-    auto end = std::chrono::high_resolution_clock::now();
-    cout << "Notch parallel time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+    auto start = chrono::high_resolution_clock::now();
+    parallel_notch(audio_data, new_audio_data, 12);
+    auto end = chrono::high_resolution_clock::now();
+    cout << "Notch parallel time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 
-    writeWavFile(outputFile + "Notch_parallel.wav", new_audioData, fileInfo);
+    writeWavFile(OUTPUT_FILE + "notch_parallel.wav", new_audio_data, file_info);
 }
 
-
-const int M_FIRF = 10;
-
-
-void* processAudioData_FIR(void* arg) {
-    ThreadData* data = static_cast<ThreadData*>(arg);
-    for (int i = data->start; i < data->end; ++i) {
+void *process_fir(void *arg)
+{
+    thread_data *data = static_cast<thread_data *>(arg);
+    for (int i = data->start; i < data->end; ++i)
+    {
         float sum = 0;
-        for (int j = 0; j < M_FIRF; ++j) {
-            if (i - j >= 0) {
-                sum += (*data->h)[j] * (*data->audioData)[i - j];
+        for (int j = 0; j < M_FIRF; ++j)
+        {
+            if (i - j >= 0)
+            {
+                sum += (*data->h)[j] * (*data->audio_data)[i - j];
             }
         }
-        (*data->newAudioData)[i] = sum;
+        (*data->new_audio_data)[i] = sum;
     }
     pthread_exit(nullptr);
 }
 
-void parallelProcessAudioData_FIR(size_t numThreads, std::vector<float> &audioData, std::vector<float> &newAudioData, std::vector<float> &h)
+void parallel_fir(size_t num_threads, vector<float> &audio_data, vector<float> &new_audio_data, vector<float> &h)
 {
-    pthread_t threads[numThreads];
-    ThreadData threadData[numThreads];
-    size_t chunkSize = audioData.size() / numThreads;
+    pthread_t threads[num_threads];
+    thread_data thread_data[num_threads];
+    size_t chunk_size = audio_data.size() / num_threads;
 
-    for (size_t i = 0; i < numThreads; ++i)
+    for (size_t i = 0; i < num_threads; ++i)
     {
-        threadData[i].audioData = &audioData;
-        threadData[i].newAudioData = &newAudioData;
-        threadData[i].h = &h;
-        threadData[i].start = i * chunkSize;
-        threadData[i].end = (i == numThreads - 1) ? audioData.size() : (i + 1) * chunkSize;
-        pthread_create(&threads[i], nullptr, processAudioData_FIR, &threadData[i]);
+        thread_data[i].audio_data = &audio_data;
+        thread_data[i].new_audio_data = &new_audio_data;
+        thread_data[i].h = &h;
+        thread_data[i].start = i * chunk_size;
+        thread_data[i].end = (i == num_threads - 1) ? audio_data.size() : (i + 1) * chunk_size;
+        pthread_create(&threads[i], nullptr, process_fir, &thread_data[i]);
     }
 
-    for (size_t i = 0; i < numThreads; ++i)
+    for (size_t i = 0; i < num_threads; ++i)
     {
         pthread_join(threads[i], nullptr);
     }
 }
 
-void finite_impulse_response_filter() {
-    SF_INFO fileInfo;
-    std::vector<float> audioData;
-    std::vector<float> h(M_FIRF);
+void finite_impulse_response_filter()
+{
+    SF_INFO file_info;
+    vector<float> audio_data;
+    vector<float> h(M_FIRF);
 
-    std::memset(&fileInfo, 0, sizeof(fileInfo));
+    memset(&file_info, 0, sizeof(file_info));
 
-    readWavFileParallel(inputFile, audioData, fileInfo);
-    std::vector<float> newAudioData(audioData.size(), 0.0f);
+    readWavFileParallel(INPUT_FILE, audio_data, file_info);
+    vector<float> new_audio_data(audio_data.size(), 0.0f);
 
-    for (int i = 0; i < M_FIRF; ++i) {
+    for (int i = 0; i < M_FIRF; ++i)
+    {
         h[i] = 1.0 / (M_FIRF / (i + 1));
     }
 
-    size_t numThreads = 12;
+    size_t num_threads = 12;
 
-    auto start = std::chrono::high_resolution_clock::now();
-    parallelProcessAudioData_FIR(numThreads, audioData, newAudioData, h);
-    auto end = std::chrono::high_resolution_clock::now();
-    cout << "FIRF parallel time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+    auto start = chrono::high_resolution_clock::now();
+    parallel_fir(num_threads, audio_data, new_audio_data, h);
+    auto end = chrono::high_resolution_clock::now();
+    cout << "FIRF parallel time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 
-    writeWavFile(outputFile + "FIRF_parallel.wav", newAudioData, fileInfo);
+    writeWavFile(OUTPUT_FILE + "firf_parallel.wav", new_audio_data, file_info);
 }
 
-const int M_IIRF = 5;
-const int N_IIRF = 2;
-
-void* processAudioData(void* arg) {
-    ThreadData* data = static_cast<ThreadData*>(arg);
-    for (int i = data->start; i < data->end; ++i) {
+void *process_iir(void *arg)
+{
+    thread_data *data = static_cast<thread_data *>(arg);
+    for (int i = data->start; i < data->end; ++i)
+    {
         float feed_forward = 0;
         float feed_back = 0;
-        for (int j = 0; j < M_IIRF; ++j) {
-            if (i - j >= 0) {
-                feed_forward += (*data->b)[j] * (*data->audioData)[i - j];
+        for (int j = 0; j < M_IIRF; ++j)
+        {
+            if (i - j >= 0)
+            {
+                feed_forward += (*data->b)[j] * (*data->audio_data)[i - j];
             }
         }
-        for (int j = 1; j <= N_IIRF; ++j) {
-            if (i - j >= 0) {
-                feed_back += (*data->a)[j] * (*data->newAudioData)[i - j];
+        for (int j = 1; j <= N_IIRF; ++j)
+        {
+            if (i - j >= 0)
+            {
+                feed_back += (*data->a)[j] * (*data->new_audio_data)[i - j];
             }
         }
-        (*data->newAudioData)[i] = feed_back - feed_forward;
+        (*data->new_audio_data)[i] = feed_back - feed_forward;
     }
     pthread_exit(nullptr);
 }
 
-void parallelProcessAudioDtaa_IIR(size_t numThreads, std::vector<float> &audioData, std::vector<float> &newAudioData, std::vector<float> &a, std::vector<float> &b)
+void parallel_iir(size_t num_threads, vector<float> &audio_data, vector<float> &new_audio_data, vector<float> &a, vector<float> &b)
 {
-    pthread_t threads[numThreads];
-    ThreadData threadData[numThreads];
-    size_t chunkSize = audioData.size() / numThreads;
+    pthread_t threads[num_threads];
+    thread_data thread_data[num_threads];
+    size_t chunk_size = audio_data.size() / num_threads;
 
-    for (size_t i = 0; i < numThreads; ++i)
+    for (size_t i = 0; i < num_threads; ++i)
     {
-        threadData[i].audioData = &audioData;
-        threadData[i].newAudioData = &newAudioData;
-        threadData[i].a = &a;
-        threadData[i].b = &b;
-        threadData[i].start = i * chunkSize;
-        threadData[i].end = (i == numThreads - 1) ? audioData.size() : (i + 1) * chunkSize;
-        pthread_create(&threads[i], nullptr, processAudioData, &threadData[i]);
+        thread_data[i].audio_data = &audio_data;
+        thread_data[i].new_audio_data = &new_audio_data;
+        thread_data[i].a = &a;
+        thread_data[i].b = &b;
+        thread_data[i].start = i * chunk_size;
+        thread_data[i].end = (i == num_threads - 1) ? audio_data.size() : (i + 1) * chunk_size;
+        pthread_create(&threads[i], nullptr, process_iir, &thread_data[i]);
     }
 
-    for (size_t i = 0; i < numThreads; ++i)
+    for (size_t i = 0; i < num_threads; ++i)
     {
         pthread_join(threads[i], nullptr);
     }
 }
 
-void infinite_impulse_response_filter() {
-    SF_INFO fileInfo;
-    std::vector<float> audioData;
-    std::vector<float> a(N_IIRF);
-    std::vector<float> b(M_IIRF);
+void infinite_impulse_response_filter()
+{
+    SF_INFO file_info;
+    vector<float> audio_data;
+    vector<float> a(N_IIRF);
+    vector<float> b(M_IIRF);
 
-    std::memset(&fileInfo, 0, sizeof(fileInfo));
+    memset(&file_info, 0, sizeof(file_info));
 
-    readWavFileParallel(inputFile, audioData, fileInfo);
-    std::vector<float> newAudioData(audioData.size(), 0.0f);
+    readWavFileParallel(INPUT_FILE, audio_data, file_info);
+    vector<float> new_audio_data(audio_data.size(), 0.0f);
 
-    for (int i = 0; i < M_IIRF; ++i) {
+    for (int i = 0; i < M_IIRF; ++i)
+    {
         b[i] = 1.0 / (M_IIRF / (i + 1));
     }
 
-    for (int i = 0; i < N_IIRF; ++i) {
+    for (int i = 0; i < N_IIRF; ++i)
+    {
         a[i] = 1.0 / (N_IIRF / (i + 1));
     }
 
-    size_t numThreads = 12;
+    size_t num_threads = 12;
 
-    auto start = std::chrono::high_resolution_clock::now();
-    parallelProcessAudioDtaa_IIR(numThreads, audioData, newAudioData, a, b);
-    auto end = std::chrono::high_resolution_clock::now();
-    cout << "IIRF parallel time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+    auto start = chrono::high_resolution_clock::now();
+    parallel_iir(num_threads, audio_data, new_audio_data, a, b);
+    auto end = chrono::high_resolution_clock::now();
+    cout << "IIRF parallel time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 
-    writeWavFile(outputFile + "IIRF_parallel.wav", newAudioData, fileInfo);
+    writeWavFile(OUTPUT_FILE + "iirf_parallel.wav", new_audio_data, file_info);
 }
 
 void test_read()
 {
-    SF_INFO fileInfo;
-    std::vector<float> audioData;
+    SF_INFO file_info;
+    vector<float> audio_data;
 
-    std::memset(&fileInfo, 0, sizeof(fileInfo));
+    memset(&file_info, 0, sizeof(file_info));
 
-    auto start = std::chrono::high_resolution_clock::now();
-    readWavFileParallel(inputFile, audioData, fileInfo);
-    auto end = std::chrono::high_resolution_clock::now();
-    cout << "Read parallel time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+    auto start = chrono::high_resolution_clock::now();
+    readWavFileParallel(INPUT_FILE, audio_data, file_info);
+    auto end = chrono::high_resolution_clock::now();
+    cout << "Read parallel time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 }
 
 int main()
 {
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = chrono::high_resolution_clock::now();
     test_read();
 
-    Band_pass_filter_parallel();
+    band_pass_filter_parallel();
 
-    Notch_filter_parallel();
+    notch_filter_parallel();
 
     finite_impulse_response_filter();
 
     infinite_impulse_response_filter();
-    auto end = std::chrono::high_resolution_clock::now();
-    cout << "Total parallel time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+    auto end = chrono::high_resolution_clock::now();
+    cout << "Total parallel time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 
     return 0;
 }

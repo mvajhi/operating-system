@@ -14,4 +14,4 @@ void writeWavFile(const std::string &outputFile, const std::vector<float> &data,
 
 void readWavFileParallel(const std::string &inputFile, std::vector<float> &data, SF_INFO &fileInfo);
 
-#endif // WAVFILEOPERATIONS_H
+#endif

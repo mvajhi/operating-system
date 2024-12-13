@@ -1,120 +1,97 @@
-#include <iostream>
-#include <sndfile.h>
-#include <vector>
-#include <string>
-#include <cstring>
-#include <cmath>
-#include <pthread.h>
-#include <chrono>
-#include "WavFileOperations.h"
+#include "define.hpp"
 
-using namespace std;
-
-float CONST_BPF = 1.1;
-
-std::string inputFile = "input.wav";
-std::string outputFile = "./out/output";
-
-void Band_pass_filter()
+void band_pass_filter()
 {
-    SF_INFO fileInfo;
-    std::vector<float> audioData;
+    SF_INFO file_info;
+    vector<float> audio_data;
 
-    std::memset(&fileInfo, 0, sizeof(fileInfo));
+    memset(&file_info, 0, sizeof(file_info));
 
-    readWavFile(inputFile, audioData, fileInfo);
+    readWavFile(INPUT_FILE, audio_data, file_info);
 
-    std::vector<float> newAudioData(audioData.size(), 0.0f);
+    vector<float> new_audio_data(audio_data.size(), 0.0f);
 
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = chrono::high_resolution_clock::now();
     auto power2_const = pow(CONST_BPF, 2);
-    for (size_t i = 0; i < audioData.size(); i++)
+    for (size_t i = 0; i < audio_data.size(); i++)
     {
-        auto power2 = pow(audioData[i], 2);
-        newAudioData[i] = power2 / (power2 + power2_const);
+        auto power2 = pow(audio_data[i], 2);
+        new_audio_data[i] = power2 / (power2 + power2_const);
     }
-    auto end = std::chrono::high_resolution_clock::now();
-    cout << "BPF time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+    auto end = chrono::high_resolution_clock::now();
+    cout << "BPF time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 
-    writeWavFile(outputFile + "Band_pass.wav", newAudioData, fileInfo);
+    writeWavFile(OUTPUT_FILE + "band_pass.wav", new_audio_data, file_info);
 }
 
-float CONST_F0_NOTCH = 0.1;
-int N_NOTCH = 2;
-
-void Notch_filter()
+void notch_filter()
 {
-    SF_INFO fileInfo;
-    std::vector<float> audioData;
+    SF_INFO file_info;
+    vector<float> audio_data;
 
-    std::memset(&fileInfo, 0, sizeof(fileInfo));
+    memset(&file_info, 0, sizeof(file_info));
 
-    readWavFile(inputFile, audioData, fileInfo);
-    std::vector<float> new_audioData(audioData.size(), 0.0f);
+    readWavFile(INPUT_FILE, audio_data, file_info);
+    vector<float> new_audio_data(audio_data.size(), 0.0f);
 
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = chrono::high_resolution_clock::now();
     auto tmp = 2 * N_NOTCH;
-    for (size_t i = 0; i < audioData.size(); i++)
+    for (size_t i = 0; i < audio_data.size(); i++)
     {
-        new_audioData[i] = 1 / (1 + pow(audioData[i] / CONST_F0_NOTCH, tmp));
+        new_audio_data[i] = 1 / (1 + pow(audio_data[i] / CONST_F0_NOTCH, tmp));
     }
-    auto end = std::chrono::high_resolution_clock::now();
-    cout << "Notch time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+    auto end = chrono::high_resolution_clock::now();
+    cout << "Notch time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 
-    writeWavFile(outputFile + "Notch.wav", new_audioData, fileInfo);
+    writeWavFile(OUTPUT_FILE + "notch.wav", new_audio_data, file_info);
 }
-
-int M_FIRF = 10;
 
 void finite_impulse_response_filter()
 {
-    std::vector<float> h;
-    SF_INFO fileInfo;
-    std::vector<float> audioData;
+    vector<float> h;
+    SF_INFO file_info;
+    vector<float> audio_data;
 
-    std::memset(&fileInfo, 0, sizeof(fileInfo));
+    memset(&file_info, 0, sizeof(file_info));
 
-    readWavFile(inputFile, audioData, fileInfo);
-    std::vector<float> audioData_new(audioData.size(), 0.0f);
+    readWavFile(INPUT_FILE, audio_data, file_info);
+    vector<float> audio_data_new(audio_data.size(), 0.0f);
 
     for (int i = 0; i < M_FIRF; i++)
     {
         h.push_back(1.0 / (M_FIRF / (i + 1)));
     }
 
-    auto start = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < audioData.size(); i++)
+    auto start = chrono::high_resolution_clock::now();
+    for (size_t i = 0; i < audio_data.size(); i++)
     {
         float sum = 0;
         for (int j = 0; j < M_FIRF; j++)
         {
             if (i - j >= 0)
             {
-                sum += h[j] * audioData[i - j];
+                sum += h[j] * audio_data[i - j];
             }
         }
-        audioData_new[i] = sum;
+        audio_data_new[i] = sum;
     }
-    auto end = std::chrono::high_resolution_clock::now();
-    cout << "FIRF time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+    auto end = chrono::high_resolution_clock::now();
+    cout << "FIRF time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 
-    writeWavFile(outputFile + "FIRF.wav", audioData_new, fileInfo);
+    writeWavFile(OUTPUT_FILE + "firf.wav", audio_data_new, file_info);
 }
-
-int M_IIRF = 5;
-int N_IIRF = 2;
 
 void infinite_impulse_response_filter()
 {
-    std::vector<float> a;
-    std::vector<float> b;
-    SF_INFO fileInfo;
-    std::vector<float> audioData;
-    std::vector<float> audioData_new;
+    vector<float> a;
+    vector<float> b;
+    SF_INFO file_info;
+    vector<float> audio_data;
+    vector<float> audio_data_new;
 
-    std::memset(&fileInfo, 0, sizeof(fileInfo));
+    memset(&file_info, 0, sizeof(file_info));
 
-    readWavFile(inputFile, audioData, fileInfo);
+    readWavFile(INPUT_FILE, audio_data, file_info);
 
     for (int i = 0; i < M_IIRF; i++)
     {
@@ -126,8 +103,8 @@ void infinite_impulse_response_filter()
         a.push_back(1.0 / (N_IIRF / (i + 1)));
     }
 
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < (int)audioData.size(); i++)
+    auto start = chrono::high_resolution_clock::now();
+    for (int i = 0; i < (int)audio_data.size(); i++)
     {
         float feed_forward = 0;
         float feed_back = 0;
@@ -135,51 +112,51 @@ void infinite_impulse_response_filter()
         {
             if (i - j >= 0)
             {
-                feed_forward += b[j] * audioData[i - j];
+                feed_forward += b[j] * audio_data[i - j];
             }
         }
         for (int j = 1; j <= N_IIRF; j++)
         {
             if (i - j >= 0)
             {
-                feed_back += a[j] * audioData_new[i - j];
+                feed_back += a[j] * audio_data_new[i - j];
             }
         }
-        audioData_new.push_back(feed_back - feed_forward);
+        audio_data_new.push_back(feed_back - feed_forward);
     }
-    auto end = std::chrono::high_resolution_clock::now();
-    cout << "IIRF time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+    auto end = chrono::high_resolution_clock::now();
+    cout << "IIRF time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 
-    writeWavFile(outputFile + "IIRF.wav", audioData_new, fileInfo);
+    writeWavFile(OUTPUT_FILE + "iirf.wav", audio_data_new, file_info);
 }
 
 void test_read()
 {
-    SF_INFO fileInfo;
-    std::vector<float> audioData;
+    SF_INFO file_info;
+    vector<float> audio_data;
 
-    std::memset(&fileInfo, 0, sizeof(fileInfo));
+    memset(&file_info, 0, sizeof(file_info));
 
-    auto start = std::chrono::high_resolution_clock::now();
-    readWavFile(inputFile, audioData, fileInfo);
-    auto end = std::chrono::high_resolution_clock::now();
-    cout << "Read time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+    auto start = chrono::high_resolution_clock::now();
+    readWavFile(INPUT_FILE, audio_data, file_info);
+    auto end = chrono::high_resolution_clock::now();
+    cout << "Read time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 }
 
 int main()
 {
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = chrono::high_resolution_clock::now();
     test_read();
 
-    Band_pass_filter();
+    band_pass_filter();
 
-    Notch_filter();
+    notch_filter();
 
     finite_impulse_response_filter();
 
     infinite_impulse_response_filter();
-    auto end = std::chrono::high_resolution_clock::now();
-    cout << "Total time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << endl;
+    auto end = chrono::high_resolution_clock::now();
+    cout << "Total time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 
     return 0;
 }
