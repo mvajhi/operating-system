@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -lsndfile -Wall -g -I. -I../shared
+CXXFLAGS = -lsndfile -Wall -g -I. -I../shared -std=c++11
 
 
 SRC_DIR = .

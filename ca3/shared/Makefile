@@ -1,7 +1,7 @@
 # shared/Makefile
 
 CXX = g++
-CXXFLAGS = -lsndfile -Wall -g -I.
+CXXFLAGS = -lsndfile -Wall -g -I. -std=c++11
 
 SRC_DIR = .
 OBJ_DIR = out
