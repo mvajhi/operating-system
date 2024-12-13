@@ -208,23 +208,23 @@ void parallel_iir(size_t num_threads, vector<float> &audio_data, vector<float> &
         pthread_create(&threads[i], nullptr, process_iir, &thread_data[i]);
     }
 
-    for (size_t i = 0; i < num_threads; ++i)
+    for (int i = 0; i < (int)num_threads; ++i)
     {
         pthread_join(threads[i], nullptr);
+        for (int k = thread_data[i].start; k < thread_data[i].end; k++)
+        {
+            float feed_back = 0;
+            for (int j = 1; j <= N_IIRF; j++)
+            {
+                if (k - j >= 0)
+                {
+                    feed_back += a[j] * new_audio_data[k - j];
+                }
+            }
+            new_audio_data[k] -= feed_back;
+        }
     }
 
-    for (int i = 0; i < (int)audio_data.size(); i++)
-    {
-        float feed_back = 0;
-        for (int j = 1; j <= N_IIRF; j++)
-        {
-            if (i - j >= 0)
-            {
-                feed_back += a[j] * new_audio_data[i - j];
-            }
-        }
-        new_audio_data[i] -= feed_back;
-    }
 }
 
 void infinite_impulse_response_filter()

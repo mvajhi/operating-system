@@ -1,7 +1,10 @@
 #!/bin/bash
 
-rm -rf result
 mkdir result
+
+rm -rf ./shared/out
+rm -rf ./serial/out
+rm -rf ./parallel/out
 
 make -C shared
 make -C serial
