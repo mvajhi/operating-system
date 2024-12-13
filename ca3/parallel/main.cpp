@@ -45,7 +45,7 @@ void band_pass_filter_parallel()
 
     readWavFileParallel(INPUT_FILE, audio_data, file_info);
 
-    vector<float> new_audio_data(audio_data.size(), 0.0f);
+    vector<float> new_audio_data(audio_data.size(), 0);
 
     auto start = chrono::high_resolution_clock::now();
     parallel_bp(audio_data, new_audio_data, 12);
@@ -97,7 +97,7 @@ void notch_filter_parallel()
     memset(&file_info, 0, sizeof(file_info));
 
     readWavFileParallel(INPUT_FILE, audio_data, file_info);
-    vector<float> new_audio_data(audio_data.size(), 0.0f);
+    vector<float> new_audio_data(audio_data.size(), 0);
 
     auto start = chrono::high_resolution_clock::now();
     parallel_notch(audio_data, new_audio_data, 12);
@@ -156,7 +156,7 @@ void finite_impulse_response_filter()
     memset(&file_info, 0, sizeof(file_info));
 
     readWavFileParallel(INPUT_FILE, audio_data, file_info);
-    vector<float> new_audio_data(audio_data.size(), 0.0f);
+    vector<float> new_audio_data(audio_data.size(), 0);
 
     for (int i = 0; i < M_FIRF; ++i)
     {
@@ -179,7 +179,6 @@ void *process_iir(void *arg)
     for (int i = data->start; i < data->end; ++i)
     {
         float feed_forward = 0;
-        float feed_back = 0;
         for (int j = 0; j < M_IIRF; ++j)
         {
             if (i - j >= 0)
@@ -187,14 +186,7 @@ void *process_iir(void *arg)
                 feed_forward += (*data->b)[j] * (*data->audio_data)[i - j];
             }
         }
-        for (int j = 1; j <= N_IIRF; ++j)
-        {
-            if (i - j >= 0)
-            {
-                feed_back += (*data->a)[j] * (*data->new_audio_data)[i - j];
-            }
-        }
-        (*data->new_audio_data)[i] = feed_back - feed_forward;
+        (*data->new_audio_data)[i] = feed_forward;
     }
     pthread_exit(nullptr);
 }
@@ -220,6 +212,19 @@ void parallel_iir(size_t num_threads, vector<float> &audio_data, vector<float> &
     {
         pthread_join(threads[i], nullptr);
     }
+
+    for (int i = 0; i < (int)audio_data.size(); i++)
+    {
+        float feed_back = 0;
+        for (int j = 1; j <= N_IIRF; j++)
+        {
+            if (i - j >= 0)
+            {
+                feed_back += a[j] * new_audio_data[i - j];
+            }
+        }
+        new_audio_data[i] -= feed_back;
+    }
 }
 
 void infinite_impulse_response_filter()
@@ -232,7 +237,7 @@ void infinite_impulse_response_filter()
     memset(&file_info, 0, sizeof(file_info));
 
     readWavFileParallel(INPUT_FILE, audio_data, file_info);
-    vector<float> new_audio_data(audio_data.size(), 0.0f);
+    vector<float> new_audio_data(audio_data.size(), 0);
 
     for (int i = 0; i < M_IIRF; ++i)
     {
