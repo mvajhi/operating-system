@@ -20,8 +20,8 @@ const float CONST_BPF = 1.1;
 const float CONST_F0_NOTCH = 0.1;
 const int N_NOTCH = 2;
 const int M_FIRF = 10;
-const int M_IIRF = 5;
-const int N_IIRF = 2;
+const int M_IIRF = 10;
+const int N_IIRF = 3;
 
 struct thread_data
 {
