@@ -9,7 +9,7 @@ void band_pass_filter()
 
     readWavFile(INPUT_FILE, audio_data, file_info);
 
-    vector<float> new_audio_data(audio_data.size(), 0.0f);
+    vector<float> new_audio_data(audio_data.size(), 0);
 
     auto start = chrono::high_resolution_clock::now();
     auto power2_const = pow(CONST_BPF, 2);
@@ -32,7 +32,7 @@ void notch_filter()
     memset(&file_info, 0, sizeof(file_info));
 
     readWavFile(INPUT_FILE, audio_data, file_info);
-    vector<float> new_audio_data(audio_data.size(), 0.0f);
+    vector<float> new_audio_data(audio_data.size(), 0);
 
     auto start = chrono::high_resolution_clock::now();
     auto tmp = 2 * N_NOTCH;
@@ -55,7 +55,7 @@ void finite_impulse_response_filter()
     memset(&file_info, 0, sizeof(file_info));
 
     readWavFile(INPUT_FILE, audio_data, file_info);
-    vector<float> audio_data_new(audio_data.size(), 0.0f);
+    vector<float> audio_data_new(audio_data.size(), 0);
 
     for (int i = 0; i < M_FIRF; i++)
     {
@@ -63,7 +63,7 @@ void finite_impulse_response_filter()
     }
 
     auto start = chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < audio_data.size(); i++)
+    for (int i = 0; i < (int)audio_data.size(); i++)
     {
         float sum = 0;
         for (int j = 0; j < M_FIRF; j++)
@@ -87,11 +87,11 @@ void infinite_impulse_response_filter()
     vector<float> b;
     SF_INFO file_info;
     vector<float> audio_data;
-    vector<float> audio_data_new;
 
     memset(&file_info, 0, sizeof(file_info));
 
     readWavFile(INPUT_FILE, audio_data, file_info);
+    vector<float> audio_data_new(audio_data.size(), 0);
 
     for (int i = 0; i < M_IIRF; i++)
     {
@@ -122,7 +122,7 @@ void infinite_impulse_response_filter()
                 feed_back += a[j] * audio_data_new[i - j];
             }
         }
-        audio_data_new.push_back(feed_back - feed_forward);
+        audio_data_new[i] = feed_forward - feed_back;
     }
     auto end = chrono::high_resolution_clock::now();
     cout << "IIRF time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
